@@ -6,22 +6,6 @@
 <meta name="theme-color" content="#0b1a2e">
 <meta name="app-version" content="2.1-offline">
 <title>Химические элементы</title>
-<script>
-(function(){
-    'use strict';
-    try {
-        if (window.name === '__chem_loaded__') { window.name = ''; return; }
-        var saved = null;
-        try { saved = localStorage.getItem('__chem_saved_html__'); } catch(e) {}
-        if (saved && saved.length > 200 && saved.indexOf('<html') !== -1) {
-            window.name = '__chem_loaded__';
-            document.open();
-            document.write(saved);
-            document.close();
-        }
-    } catch(e) { console.warn('Bootstrap:', e); }
-})();
-</script>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 html, body { height: 100%; overflow: hidden; }
@@ -350,6 +334,18 @@ var FUN = {
     desc: 'Легендарный элемент, открыт в курилке.'
 };
 
+// ============ ПОДМЕНА ВСТРОЕННЫХ ДАННЫХ СОХРАНЁННЫМИ ============
+(function loadSavedData(){
+    try {
+        var sE = localStorage.getItem('__chem_elements__');
+        var sC = localStorage.getItem('__chem_compounds__');
+        var sF = localStorage.getItem('__chem_fun__');
+        if (sE) { var p = JSON.parse(sE); if (Array.isArray(p) && p.length > 100) ELEMENTS = p; }
+        if (sC) { var pc = JSON.parse(sC); if (Array.isArray(pc) && pc.length > 0) COMPOUNDS = pc; }
+        if (sF) { var pf = JSON.parse(sF); if (pf && pf.sym) FUN = pf; }
+    } catch(e) { console.warn('Saved data:', e); }
+})();
+
 var DB = [];
 ELEMENTS.forEach(function(e){
     DB.push({
@@ -505,60 +501,72 @@ DB.push({
         }
         html += '<div class="m-table">';
         if (item.type === 'el' || item.type === 'fun'){
-            html += '<div class="m-row"><span class="k">Символ</span><span class="v">' + esc(item.sym) + '</span></div>';
-            html += '<div class="m-row"><span class="k">Атомный номер</span><span class="v">' + esc(item.num) + '</span></div>';
-            html += '<div class="m-row"><span class="k">Атомная масса</span><span class="v">' + esc(item.mass) + ' а.е.м.</span></div>';
-            html += '<div class="m-row"><span class="k">Категория</span><span class="v">' + esc(item.cat) + '</span></div>';
-            html += '<div class="m-row"><span class="k">Группа</span><span class="v">' + esc(item.group) + '</span></div>';
-            html += '<div class="m-row"><span class="k">Период</span><span class="v">' + esc(item.period) + '</span></div>';
-            html += '<div class="m-row"><span class="k">T плавления</span><span class="v">' + (item.melt !== null && item.melt !== undefined ? esc(item.melt) + ' °C' : '—') + '</span></div>';
-            html += '<div class="m-row"><span class="k">T кипения</span><span class="v">' + (item.boil !== null && item.boil !== undefined ? esc(item.boil) + ' °C' : '—') + '</span></div>';
-            html += '<div class="m-row"><span class="k">Год открытия</span><span class="v">' + esc(item.year) + '</span></div>';
-        } else if (item.type === 'comp'){
-            html += '<div class="m-row"><span class="k">Формула</span><span class="v">' + esc(item.formula) + '</span></div>';
-            html += '<div class="m-row"><span class="k">Тип</span><span class="v">' + esc(item.desc || 'соединение') + '</span></div>';
-        }
-        html += '</div>';
-        if (item.desc) html += '<div class="m-desc">' + esc(item.desc) + '</div>';
-        modalContent.innerHTML = html;
-        modal.classList.add('show');
-        modal.scrollTop = 0;
-    }
-    function closeModal(){ modal.classList.remove('show'); }
-    closeBtn.addEventListener('click', closeModal);
-    modal.addEventListener('click', function(e){ if (e.target === modal) closeModal(); });
-    document.addEventListener('keydown', function(e){ if (e.key === 'Escape'){ closeModal(); updModal.classList.remove('show'); } });
+function getSavedDate() {
+    try { return localStorage.getItem('__chem_updated_at__'); } catch(e) { return null; }
+}
+function hasSavedData() {
+    try { return !!localStorage.getItem('__chem_elements__'); } catch(e) { return false; }
+}
 
-    function getUpdateUrl(){
-        try { return localStorage.getItem(LS_URL_KEY) || DEFAULT_URL; } catch(e) { return DEFAULT_URL; }
+function updateStatus() {
+    var saved = hasSavedData();
+    var date = getSavedDate();
+    if (saved) {
+        var d = date ? new Date(date) : null;
+        var dStr = d ? d.toLocaleDateString('ru-RU') + ' ' + d.toLocaleTimeString('ru-RU', {hour:'2-digit',minute:'2-digit'}) : '';
+        statusLine.textContent = '📦 офлайн · данные ' + dStr;
+        versionLine.textContent = 'v2.1-offline · данные с GitHub';
+    } else {
+        statusLine.textContent = '📦 офлайн · встроенные данные';
+        versionLine.textContent = 'v2.1-offline · встроенные данные';
     }
-    function setUpdateUrl(u){
-        try { localStorage.setItem(LS_URL_KEY, u); } catch(e) {}
-    }
+    counter.textContent = '✓ Загружено: ' + DB.length + ' записей';
+}
 
-    function openUpdModal(){
-        updUrl.value = getUpdateUrl();
-        var saved = isSaved();
-        var date = getSavedDate();
-        if (saved && date){
-            var d = new Date(date);
-            updStatus.className = 'upd-status info';
-            updStatus.innerHTML = '📦 <b>Используется обновлённая версия</b><br>Загружена: ' + d.toLocaleString('ru-RU');
-        } else {
-            updStatus.className = 'upd-status info';
-            updStatus.innerHTML = '📦 <b>Встроенная версия</b><br>Обновлений ещё не было.';
-        }
-        updFetchBtn.disabled = false;
-        updFetchBtn.textContent = 'Загрузить и применить';
-        updModal.classList.add('show');
-    }
-    function closeUpdModal(){ updModal.classList.remove('show'); }
-    updOpenBtn.addEventListener('click', openUpdModal);
-    updCloseBtn.addEventListener('click', closeUpdModal);
-    updModal.addEventListener('click', function(e){ if (e.target === updModal) closeUpdModal(); });
-    updUrl.addEventListener('change', function(){ setUpdateUrl(updUrl.value.trim()); });
+function getUpdateUrl(){
+    try { return localStorage.getItem(LS_URL_KEY) || DEFAULT_URL; } catch(e) { return DEFAULT_URL; }
+}
+function setUpdateUrl(u){
+    try { localStorage.setItem(LS_URL_KEY, u); } catch(e) {}
+}
 
-    updFetchBtn.addEventListener('click', function(){
+function openUpdModal(){
+    updUrl.value = getUpdateUrl();
+    var saved = hasSavedData();
+    var date = getSavedDate();
+    if (saved && date){
+        var d = new Date(date);
+        updStatus.className = 'upd-status info';
+        updStatus.innerHTML = '📦 <b>Используются данные с GitHub</b><br>Обновлено: ' + d.toLocaleString('ru-RU');
+    } else {
+        updStatus.className = 'upd-status info';
+        updStatus.innerHTML = '📦 <b>Встроенные данные</b><br>Обновлений ещё не было.';
+    }
+    updFetchBtn.disabled = false;
+    updFetchBtn.textContent = 'Загрузить и применить';
+    updModal.classList.add('show');
+}
+function closeUpdModal(){ updModal.classList.remove('show'); }
+updOpenBtn.addEventListener('click', openUpdModal);
+updCloseBtn.addEventListener('click', closeUpdModal);
+updModal.addEventListener('click', function(e){ if (e.target === updModal) closeUpdModal(); });
+updUrl.addEventListener('change', function(){ setUpdateUrl(updUrl.value.trim()); });
+
+// Извлекаем массив/объект из HTML через regex + Function
+function extractArray(html, varName) {
+    var re = new RegExp('var\\s+' + varName + '\\s*=\\s*(\\[[\\s\\S]*?\\]);', 'm');
+    var m = html.match(re);
+    if (!m) return null;
+    try { return new Function('return ' + m[1])(); } catch(e) { return null; }
+}
+function extractObject(html, varName) {
+    var re = new RegExp('var\\s+' + varName + '\\s*=\\s*(\\{[\\s\\S]*?\\});', 'm');
+    var m = html.match(re);
+    if (!m) return null;
+    try { return new Function('return ' + m[1])(); } catch(e) { return null; }
+}
+
+updFetchBtn.addEventListener('click', function(){
     var url = updUrl.value.trim();
     if (!url){ updStatus.className = 'upd-status err'; updStatus.textContent = 'Укажите URL'; return; }
     setUpdateUrl(url);
@@ -573,33 +581,16 @@ DB.push({
     ];
     var idx = 0;
 
-    function finish(html, methodName) {
-        try {
-            localStorage.setItem(LS_HTML_KEY, html);
-            localStorage.setItem(LS_DATE_KEY, new Date().toISOString());
-        } catch(e) {
-            updStatus.className = 'upd-status err';
-            updStatus.innerHTML = '⚠️ Скачалось, но не удалось сохранить:<br>' + e.message;
-            updFetchBtn.disabled = false;
-            updFetchBtn.textContent = 'Загрузить и применить';
-            return;
-        }
-        updStatus.className = 'upd-status ok';
-        updStatus.innerHTML = '✅ <b>Успешно!</b><br>Способ: ' + methodName
-            + '<br>Скачано: ' + Math.round(html.length/1024) + ' KB<br>Перезагрузка...';
-        setTimeout(function(){ window.name = ''; location.reload(); }, 900);
+    function resetBtn() {
+        updFetchBtn.disabled = false;
+        updFetchBtn.textContent = 'Загрузить и применить';
     }
 
     function tryNext() {
         if (idx >= attempts.length) {
             updStatus.className = 'upd-status err';
-            updStatus.innerHTML = '❌ <b>Все 4 способа не сработали.</b><br><br>'
-                + 'Скорее всего, WebView в вашем APK полностью блокирует сеть. '
-                + 'Решения:<br>'
-                + '• Пересоберите APK с настройкой <code>setAllowUniversalAccessFromFileURLs(true)</code><br>'
-                + '• Или замените HTML-файл прямо в APK и пересоберите';
-            updFetchBtn.disabled = false;
-            updFetchBtn.textContent = 'Загрузить и применить';
+            updStatus.innerHTML = '❌ <b>Все способы не сработали.</b><br>Проверьте интернет и URL.';
+            resetBtn();
             return;
         }
         var a = attempts[idx];
@@ -611,10 +602,25 @@ DB.push({
                 return r.text();
             })
             .then(function(html){
-                if (!html || html.length < 500) throw new Error('Слишком маленький');
-                if (html.indexOf('<html') === -1 && html.indexOf('<!DOCTYPE') === -1)
-                    throw new Error('Не HTML');
-                finish(html, a.name);
+                if (!html || html.length < 1000) throw new Error('Слишком маленький ответ');
+                var newE = extractArray(html, 'ELEMENTS');
+                var newC = extractArray(html, 'COMPOUNDS');
+                var newF = extractObject(html, 'FUN');
+                if (!newE || newE.length < 100) throw new Error('ELEMENTS не найдены в HTML');
+                try {
+                    localStorage.setItem('__chem_elements__', JSON.stringify(newE));
+                    if (newC) localStorage.setItem('__chem_compounds__', JSON.stringify(newC));
+                    if (newF) localStorage.setItem('__chem_fun__', JSON.stringify(newF));
+                    localStorage.setItem('__chem_updated_at__', new Date().toISOString());
+                } catch(e) {
+                    throw new Error('Не удалось сохранить: ' + e.message);
+                }
+                updStatus.className = 'upd-status ok';
+                updStatus.innerHTML = '✅ <b>Успешно!</b><br>'
+                    + 'Способ: ' + a.name + '<br>'
+                    + 'Элементов: ' + newE.length + '<br>'
+                    + 'Перезагрузка...';
+                setTimeout(function(){ location.reload(); }, 900);
             })
             .catch(function(err){
                 console.warn('[' + a.name + ']', err.message);
@@ -625,18 +631,19 @@ DB.push({
     tryNext();
 });
 
-    updResetBtn.addEventListener('click', function(){
-        if (!isSaved()){ updStatus.className = 'upd-status info'; updStatus.textContent = 'Уже встроенная.'; return; }
-        if (!confirm('Удалить сохранённую версию?')) return;
-        try {
-            localStorage.removeItem(LS_HTML_KEY);
-            localStorage.removeItem(LS_DATE_KEY);
-        } catch(e) {}
-        window.name = '';
-        location.reload();
-    });
+updResetBtn.addEventListener('click', function(){
+    if (!hasSavedData()){ updStatus.className = 'upd-status info'; updStatus.textContent = 'Уже встроенные данные.'; return; }
+    if (!confirm('Удалить данные с GitHub и вернуться к встроенным?')) return;
+    try {
+        localStorage.removeItem('__chem_elements__');
+        localStorage.removeItem('__chem_compounds__');
+        localStorage.removeItem('__chem_fun__');
+        localStorage.removeItem('__chem_updated_at__');
+    } catch(e) {}
+    location.reload();
+});
 
-    input.addEventListener('input', function(){ render(input.value); });
+input.addEventListener('input', function(){ render(input.value); });
     var hintEls = document.querySelectorAll('#hints code');
     for (var i = 0; i < hintEls.length; i++){
         hintEls[i].addEventListener('click', function(){

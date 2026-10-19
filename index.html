@@ -559,36 +559,71 @@ DB.push({
     updUrl.addEventListener('change', function(){ setUpdateUrl(updUrl.value.trim()); });
 
     updFetchBtn.addEventListener('click', function(){
-        var url = updUrl.value.trim();
-        if (!url){ updStatus.className = 'upd-status err'; updStatus.textContent = 'Укажите URL'; return; }
-        setUpdateUrl(url);
-        updFetchBtn.disabled = true;
-        updFetchBtn.innerHTML = '<span class="spinner"></span> Загрузка...';
+    var url = updUrl.value.trim();
+    if (!url){ updStatus.className = 'upd-status err'; updStatus.textContent = 'Укажите URL'; return; }
+    setUpdateUrl(url);
+    updFetchBtn.disabled = true;
+    updFetchBtn.innerHTML = '<span class="spinner"></span> Загрузка...';
+
+    var attempts = [
+        { name: 'прямое', url: url },
+        { name: 'corsproxy.io', url: 'https://corsproxy.io/?url=' + encodeURIComponent(url) },
+        { name: 'allorigins', url: 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url) },
+        { name: 'codetabs', url: 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(url) }
+    ];
+    var idx = 0;
+
+    function finish(html, methodName) {
+        try {
+            localStorage.setItem(LS_HTML_KEY, html);
+            localStorage.setItem(LS_DATE_KEY, new Date().toISOString());
+        } catch(e) {
+            updStatus.className = 'upd-status err';
+            updStatus.innerHTML = '⚠️ Скачалось, но не удалось сохранить:<br>' + e.message;
+            updFetchBtn.disabled = false;
+            updFetchBtn.textContent = 'Загрузить и применить';
+            return;
+        }
+        updStatus.className = 'upd-status ok';
+        updStatus.innerHTML = '✅ <b>Успешно!</b><br>Способ: ' + methodName
+            + '<br>Скачано: ' + Math.round(html.length/1024) + ' KB<br>Перезагрузка...';
+        setTimeout(function(){ window.name = ''; location.reload(); }, 900);
+    }
+
+    function tryNext() {
+        if (idx >= attempts.length) {
+            updStatus.className = 'upd-status err';
+            updStatus.innerHTML = '❌ <b>Все 4 способа не сработали.</b><br><br>'
+                + 'Скорее всего, WebView в вашем APK полностью блокирует сеть. '
+                + 'Решения:<br>'
+                + '• Пересоберите APK с настройкой <code>setAllowUniversalAccessFromFileURLs(true)</code><br>'
+                + '• Или замените HTML-файл прямо в APK и пересоберите';
+            updFetchBtn.disabled = false;
+            updFetchBtn.textContent = 'Загрузить и применить';
+            return;
+        }
+        var a = attempts[idx];
         updStatus.className = 'upd-status info';
-        updStatus.textContent = 'Скачиваем HTML...';
-        fetch(url, { cache: 'no-store', mode: 'cors' })
+        updStatus.textContent = 'Попытка ' + (idx+1) + '/' + attempts.length + ': ' + a.name + '...';
+        fetch(a.url, { cache: 'no-store', mode: 'cors' })
             .then(function(r){
                 if (!r.ok) throw new Error('HTTP ' + r.status);
                 return r.text();
             })
             .then(function(html){
-                if (!html || html.length < 500) throw new Error('Слишком маленький ответ');
-                if (html.indexOf('<html') === -1 && html.indexOf('<!DOCTYPE') === -1) throw new Error('Это не HTML');
-                try {
-                    localStorage.setItem(LS_HTML_KEY, html);
-                    localStorage.setItem(LS_DATE_KEY, new Date().toISOString());
-                } catch(e) { throw new Error('Не удалось сохранить: ' + e.message); }
-                updStatus.className = 'upd-status ok';
-                updStatus.innerHTML = '✅ <b>Успешно!</b><br>Скачано ' + Math.round(html.length/1024) + ' KB. Перезагрузка...';
-                setTimeout(function(){ window.name = ''; location.reload(); }, 800);
+                if (!html || html.length < 500) throw new Error('Слишком маленький');
+                if (html.indexOf('<html') === -1 && html.indexOf('<!DOCTYPE') === -1)
+                    throw new Error('Не HTML');
+                finish(html, a.name);
             })
             .catch(function(err){
-                updStatus.className = 'upd-status err';
-                updStatus.innerHTML = '❌ <b>Ошибка:</b><br>' + err.message;
-                updFetchBtn.disabled = false;
-                updFetchBtn.textContent = 'Загрузить и применить';
+                console.warn('[' + a.name + ']', err.message);
+                idx++;
+                setTimeout(tryNext, 250);
             });
-    });
+    }
+    tryNext();
+});
 
     updResetBtn.addEventListener('click', function(){
         if (!isSaved()){ updStatus.className = 'upd-status info'; updStatus.textContent = 'Уже встроенная.'; return; }

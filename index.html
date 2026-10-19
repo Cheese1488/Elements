@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0b1a2e">
+<meta name="app-version" content="2.1-offline">
+<title>Химические элементы</title>
+<script>
+(function(){
+    'use strict';
+    try {
+        if (window.name === '__chem_loaded__') { window.name = ''; return; }
+        var saved = null;
+        try { saved = localStorage.getItem('__chem_saved_html__'); } catch(e) {}
+        if (saved && saved.length > 200 && saved.indexOf('<html') !== -1) {
+            window.name = '__chem_loaded__';
+            document.open();
+            document.write(saved);
+            document.close();
+        }
+    } catch(e) { console.warn('Bootstrap:', e); }
+})();
+</script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; overflow: hidden; }
+body {
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    background: #0b1a2e; display: flex; padding: 8px;
+    padding-top: max(8px, env(safe-area-inset-top));
+    padding-bottom: max(8px, env(safe-area-inset-bottom));
+    height: 100vh; height: 100dvh;
+}
+.app { flex: 1; min-height: 0; display: flex; flex-direction: column;
+    background: #16263a; border-radius: 20px; padding: 14px;
+    border: 1px solid #2b4a70; overflow: hidden; }
+.top { flex-shrink: 0; }
+.header-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+h1 { font-size: 1rem; color: #eef5ff; font-weight: 500; }
+h1 b { color: #5fb8ff; }
+.upd-btn { background: #0d1f30; border: 1px solid #2b4a70; color: #b6d6ff;
+    padding: 5px 10px; border-radius: 20px; font-size: 0.72rem;
+    cursor: pointer; display: flex; gap: 4px; align-items: center; }
+.upd-btn:active { background: #17344d; }
+.search-wrap { position: relative; margin-bottom: 6px; }
+#search { width: 100%; padding: 11px 14px 11px 38px; font-size: 16px;
+    border-radius: 40px; border: 1.5px solid #2b4a70; background: #0e1d2f;
+    color: #f0f7ff; outline: none; }
+#search:focus { border-color: #3f9eff; box-shadow: 0 0 0 3px rgba(63,158,255,0.2); }
+.icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); pointer-events: none; }
+.counter { font-size: 11px; color: #7ea3cc; margin-bottom: 6px; min-height: 14px;
+    display: flex; justify-content: space-between; gap: 8px; }
+.counter .status { font-size: 10px; color: #5a7ea3; }
+#results { flex: 1; min-height: 0; overflow-y: auto; display: flex;
+    flex-direction: column; gap: 5px; -webkit-overflow-scrolling: touch; }
+.empty { color: #7c9ac0; text-align: center; padding: 24px 8px;
+    font-size: 0.9rem; line-height: 1.5; }
+.row { display: flex; align-items: center; gap: 10px; padding: 9px 12px;
+    background: #0d1f30; border-radius: 12px; border: 1px solid #203a55;
+    cursor: pointer; flex-shrink: 0; }
+.row:active { background: #17344d; }
+.row.best { border-color: #4f9cff; background: linear-gradient(135deg, #122c45, #1b3d5c); }
+.row.fun { border: 1.5px solid #b84bff;
+    background: linear-gradient(90deg, rgba(255,75,139,0.18), rgba(75,185,255,0.18), rgba(184,75,255,0.18)); }
+.sym { font-size: 1.3rem; font-weight: 800; color: #6fc5ff; min-width: 46px;
+    text-align: center; flex-shrink: 0; }
+.row.fun .sym { color: #e97bff; }
+.info { flex: 1; min-width: 0; }
+.name { font-size: 0.92rem; color: #e0eeff; font-weight: 500;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.meta { font-size: 0.72rem; color: #7ea3cc; white-space: nowrap;
+    overflow: hidden; text-overflow: ellipsis; }
+.formula { font-family: monospace; background: #0a1929; color: #8fc5ff;
+    padding: 4px 9px; border-radius: 30px; font-size: 0.8rem;
+    font-weight: 600; border: 1px solid #1d3f60; flex-shrink: 0; }
+.hints { flex-shrink: 0; display: flex; flex-wrap: wrap; gap: 5px;
+    margin-top: 8px; justify-content: center; }
+.hints code { padding: 4px 10px; background: #0a1a2a; border: 1px solid #24476b;
+    border-radius: 30px; color: #b6d6ff; font-family: monospace;
+    font-size: 0.72rem; cursor: pointer; user-select: none; }
+.hints code:active { background: #1e3a5a; }
+.version { font-size: 10px; color: #41678b; text-align: center;
+    margin-top: 6px; flex-shrink: 0; }
+.modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+    z-index: 1000; padding: 12px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.modal.show { display: block; }
+.modal-inner { background: #16263a; border-radius: 20px; padding: 20px 18px;
+    max-width: 500px; margin: 20px auto; border: 1px solid #3f7bc0;
+    position: relative; box-shadow: 0 20px 50px rgba(0,0,0,0.9); }
+.close-btn { position: absolute; top: 10px; right: 12px; width: 34px; height: 34px;
+    border-radius: 50%; background: #0d1f30; border: 1px solid #2b4a70;
+    color: #b6d6ff; font-size: 20px; line-height: 1; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; }
+.close-btn:active { background: #17344d; }
+.m-head { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; padding-right: 40px; }
+.m-sym { font-size: 3.2rem; font-weight: 900; color: #6fc5ff; line-height: 1; min-width: 70px; text-align: center; }
+.m-name { flex: 1; min-width: 0; }
+.m-name h2 { font-size: 1.3rem; color: #eef5ff; font-weight: 600; margin-bottom: 3px; }
+.m-name p { font-size: 0.8rem; color: #7ea3cc; }
+.m-pron { margin-bottom: 14px; padding: 10px 12px; background: #0d1f30;
+    border-radius: 12px; border: 1px solid #203a55; }
+.m-pron-label { font-size: 0.72rem; color: #7ea3cc; margin-bottom: 6px; }
+.m-pron-list { display: flex; flex-wrap: wrap; gap: 5px; }
+.m-pron-list span { background: #0a1929; color: #a0c8ee; padding: 3px 10px;
+    border-radius: 20px; font-size: 0.78rem; border: 1px solid #1d3f60; font-family: monospace; }
+.m-table { display: flex; flex-direction: column; gap: 1px; }
+.m-row { display: flex; justify-content: space-between; gap: 12px;
+    padding: 9px 12px; background: #0d1f30; font-size: 0.85rem; }
+.m-row:first-child { border-radius: 10px 10px 0 0; }
+.m-row:last-child { border-radius: 0 0 10px 10px; }
+.m-row .k { color: #7ea3cc; flex-shrink: 0; }
+.m-row .v { color: #e0eeff; font-weight: 500; text-align: right; word-break: break-word; }
+.m-desc { margin-top: 14px; padding: 12px; background: #0d1f30;
+    border-radius: 12px; border-left: 3px solid #3f7bc0;
+    color: #c6dcf3; font-size: 0.87rem; line-height: 1.5; }
+.upd-inner { max-width: 460px; }
+.upd-title { font-size: 1.1rem; color: #eef5ff; margin-bottom: 12px; padding-right: 40px; font-weight: 600; }
+.upd-status { padding: 10px 12px; background: #0d1f30; border-radius: 10px;
+    font-size: 0.85rem; color: #c6dcf3; margin-bottom: 12px;
+    border-left: 3px solid #4f9cff; line-height: 1.5; }
+.upd-status.err { border-left-color: #d95a5a; color: #f3c6c6; }
+.upd-status.ok { border-left-color: #4bd47a; color: #c6f3d2; }
+.upd-status.info { border-left-color: #7ea3cc; color: #c6dcf3; }
+.upd-label { font-size: 0.78rem; color: #7ea3cc; margin-bottom: 6px; display: block; }
+#updUrl { width: 100%; padding: 10px 12px; background: #0a1929;
+    border: 1px solid #2b4a70; border-radius: 10px; color: #a0c8ee;
+    font-family: monospace; font-size: 0.8rem; outline: none; margin-bottom: 10px; }
+#updUrl:focus { border-color: #3f9eff; }
+.upd-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+.upd-btns button { flex: 1; min-width: 120px; padding: 11px 14px;
+    border-radius: 30px; border: none; cursor: pointer; font-size: 0.88rem; font-weight: 600; }
+.btn-primary { background: linear-gradient(135deg, #3a7bd5, #4fa3ff); color: #fff; }
+.btn-primary:active { background: linear-gradient(135deg, #2f6eb0, #3f8fe0); }
+.btn-primary:disabled { background: #2a4560; color: #7e9ab8; cursor: not-allowed; }
+.btn-secondary { background: #0d1f30; color: #b6d6ff; border: 1px solid #2b4a70 !important; }
+.btn-secondary:active { background: #17344d; }
+.upd-note { font-size: 0.72rem; color: #6d8eb2; margin-top: 12px;
+    line-height: 1.5; padding-top: 10px; border-top: 1px dashed #2b4a70; }
+.spinner { display: inline-block; width: 12px; height: 12px;
+    border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff;
+    border-radius: 50%; animation: spin 0.8s linear infinite;
+    vertical-align: middle; margin-right: 6px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<div class="app">
+    <div class="top">
+        <div class="header-row">
+            <h1><b>🧪</b> Химические элементы</h1>
+            <button class="upd-btn" id="updOpenBtn">🔄 Обновить</button>
+        </div>
+        <div class="search-wrap">
+            <span class="icon">🔎</span>
+            <input id="search" type="text" placeholder="Au, Купрум, Феррум, H2O..." autocomplete="off" spellcheck="false" autofocus>
+        </div>
+        <div class="counter">
+            <span id="counter"></span>
+            <span class="status" id="statusLine"></span>
+        </div>
+    </div>
+    <div id="results">
+        <div class="empty">Введите запрос — здесь появятся совпадения<br><br>Нажмите на элемент, чтобы увидеть всю информацию</div>
+    </div>
+    <div class="hints" id="hints">
+        <code data-q="Купрум">Купрум</code>
+        <code data-q="Феррум">Феррум</code>
+        <code data-q="Аурум">Аурум</code>
+        <code data-q="Аргентум">Аргентум</code>
+        <code data-q="Cuprum">Cuprum</code>
+        <code data-q="Iron">Iron</code>
+        <code data-q="H2O">H2O</code>
+        <code data-q="Au">Au</code>
+    </div>
+    <div class="version" id="versionLine">v2.1-offline</div>
+</div>
+<div class="modal" id="modal">
+    <div class="modal-inner">
+        <button class="close-btn" id="closeBtn">×</button>
+        <div id="modalContent"></div>
+    </div>
+</div>
+<div class="modal" id="updModal">
+    <div class="modal-inner upd-inner">
+        <button class="close-btn" id="updCloseBtn">×</button>
+        <div class="upd-title">🔄 Обновление приложения</div>
+        <div class="upd-status info" id="updStatus">Текущая версия: загрузка...</div>
+        <label class="upd-label" for="updUrl">URL для загрузки (raw GitHub):</label>
+        <input id="updUrl" type="url" spellcheck="false" autocomplete="off">
+        <div class="upd-btns">
+            <button class="btn-primary" id="updFetchBtn">Загрузить и применить</button>
+            <button class="btn-secondary" id="updResetBtn">↩ К встроенной</button>
+        </div>
+        <div class="upd-note">
+            💡 Загружается новый HTML с GitHub и сохраняется локально.
+            Приложение продолжит работать офлайн.
+        </div>
+    </div>
+</div>
+<script>
+(function(){
+    'use strict';
+    var DEFAULT_URL = 'https://raw.githubusercontent.com/USERNAME/chem-search/main/index.html';
+    var LS_URL_KEY = '__chem_update_url__';
+    var LS_HTML_KEY = '__chem_saved_html__';
+    var LS_DATE_KEY = '__chem_updated_at__';
+  var ELEMENTS = [
+[1,'H','Водород','1.008','Неметалл',1,1,['гидроген','hydrogen'],-259,-253,1766,'Самый лёгкий и распространённый элемент во Вселенной.'],
+[2,'He','Гелий','4.003','Благородный газ',18,1,['гелиум','helium'],-272,-269,1868,'Второй по лёгкости элемент. Инертный газ.'],
+[3,'Li','Литий','6.94','Щелочной металл',1,2,['литиум','lithium'],181,1342,1817,'Самый лёгкий металл. Аккумуляторы.'],
+[4,'Be','Бериллий','9.012','Щёлочноземельный металл',2,2,['бериллиум','beryllium'],1287,2469,1798,'Лёгкий, но очень токсичный.'],
+[5,'B','Бор','10.81','Полуметалл',13,2,['борум','boron'],2076,3927,1808,'Стекло, керамика, полупроводники.'],
+[6,'C','Углерод','12.011','Неметалл',14,2,['карбон','carbon'],3550,4027,'доист.','Основа органической жизни.'],
+[7,'N','Азот','14.007','Неметалл',15,2,['нитроген','nitrogen'],-210,-196,1772,'78% атмосферы. Синтез белков.'],
+[8,'O','Кислород','15.999','Неметалл',16,2,['оксиген','oxygen'],-219,-183,1774,'Самый распространённый в земной коре.'],
+[9,'F','Фтор','18.998','Галоген',17,2,['фтор','fluorine'],-220,-188,1886,'Самый химически активный неметалл.'],
+[10,'Ne','Неон','20.180','Благородный газ',18,2,['неон','neon'],-249,-246,1898,'Оранжево-красное свечение в лампах.'],
+[11,'Na','Натрий','22.990','Щелочной металл',1,3,['натриум','natrium','sodium'],98,883,1807,'Компонент поваренной соли.'],
+[12,'Mg','Магний','24.305','Щёлочноземельный металл',2,3,['магнезиум','magnesium'],650,1091,1755,'Сплавы, фейерверки.'],
+[13,'Al','Алюминий','26.982','Постпереходный металл',13,3,['алюминиум','aluminium','aluminum'],660,2519,1825,'Самый распространённый металл в коре.'],
+[14,'Si','Кремний','28.085','Полуметалл',14,3,['силициум','silicium','silicon'],1414,3265,1824,'Основа полупроводников.'],
+[15,'P','Фосфор','30.974','Неметалл',15,3,['фосфор','phosphorus'],44,281,1669,'ДНК, АТФ, кости.'],
+[16,'S','Сера','32.06','Неметалл',16,3,['сульфур','sulfur','sulphur'],115,445,'доист.','Жёлтое кристаллическое вещество.'],
+[17,'Cl','Хлор','35.45','Галоген',17,3,['хлор','chlorum','chlorine'],-101,-34,1774,'Обеззараживание воды.'],
+[18,'Ar','Аргон','39.948','Благородный газ',18,3,['аргон','argon'],-189,-186,1894,'Третий газ атмосферы.'],
+[19,'K','Калий','39.098','Щелочной металл',1,4,['калиум','kalium','potassium'],63,759,1807,'Работа нервных клеток. Удобрения.'],
+[20,'Ca','Кальций','40.078','Щёлочноземельный металл',2,4,['кальциум','calcium'],842,1484,1808,'Основа костей и зубов.'],
+[21,'Sc','Скандий','44.956','Переходный металл',3,4,['скандиум','scandium'],1541,2836,1879,'Лёгкие сплавы для аэрокосмоса.'],
+[22,'Ti','Титан','47.867','Переходный металл',4,4,['титанум','titanium'],1668,3287,1791,'Прочный, лёгкий. Импланты, самолёты.'],
+[23,'V','Ванадий','50.942','Переходный металл',5,4,['ванадиум','vanadium'],1910,3407,1801,'Инструментальные стали.'],
+[24,'Cr','Хром','51.996','Переходный металл',6,4,['хромиум','chromium'],1907,2671,1797,'Нержавеющая сталь.'],
+[25,'Mn','Марганец','54.938','Переходный металл',7,4,['манганиум','манганум','manganese'],1246,2061,1774,'Сталь, батарейки.'],
+[26,'Fe','Железо','55.845','Переходный металл',8,4,['феррум','ферум','ferrum','iron'],1538,2862,'доист.','Основа стали. Гемоглобин.'],
+[27,'Co','Кобальт','58.933','Переходный металл',9,4,['кобальтум','cobaltum','cobalt'],1495,2927,1735,'Синий пигмент, батареи.'],
+[28,'Ni','Никель','58.693','Переходный металл',10,4,['никель','niccolum','nickel'],1455,2913,1751,'Сплавы, монеты, аккумуляторы.'],
+[29,'Cu','Медь','63.546','Переходный металл',11,4,['купрум','cuprum','copper'],1085,2562,'доист.','Отличный проводник. Бронза.'],
+[30,'Zn','Цинк','65.38','Переходный металл',12,4,['цинкум','zincum','zinc'],420,907,1746,'Оцинковка стали.'],
+[31,'Ga','Галлий','69.723','Постпереходный металл',13,4,['галлиум','gallium'],30,2204,1875,'Плавится в руке. LED.'],
+[32,'Ge','Германий','72.630','Полуметалл',14,4,['германиум','germanium'],938,2833,1886,'Оптоволокно, ИК-оптика.'],
+[33,'As','Мышьяк','74.922','Полуметалл',15,4,['арсеникум','arsenicum','arsenic'],817,614,'доист.','Сильно ядовит. Полупроводники.'],
+[34,'Se','Селен','78.971','Неметалл',16,4,['селенум','selenium'],221,685,1817,'Необходим в малых дозах.'],
+[35,'Br','Бром','79.904','Галоген',17,4,['бромум','bromum','bromine'],-7,59,1826,'Красно-бурая жидкость.'],
+[36,'Kr','Криптон','83.798','Благородный газ',18,4,['криптон','krypton'],-157,-153,1898,'Инертный газ. Лампы, лазеры.'],
+[37,'Rb','Рубидий','85.468','Щелочной металл',1,5,['рубидиум','rubidium'],39,688,1861,'Атомные часы.'],
+[38,'Sr','Стронций','87.62','Щёлочноземельный металл',2,5,['стронциум','strontium'],777,1382,1790,'Красный цвет в фейерверках.'],
+[39,'Y','Иттрий','88.906','Переходный металл',3,5,['иттриум','yttrium'],1522,3345,1794,'LED, сверхпроводники.'],
+[40,'Zr','Цирконий','91.224','Переходный металл',4,5,['циркониум','zirconium'],1855,4409,1789,'Ядерные реакторы.'],
+[41,'Nb','Ниобий','92.906','Переходный металл',5,5,['ниобиум','niobium'],2477,4744,1801,'Сверхпроводящие магниты.'],
+[42,'Mo','Молибден','95.95','Переходный металл',6,5,['молибденум','molybdenum'],2623,4639,1781,'Прочность сталей.'],
+[43,'Tc','Технеций','98','Переходный металл',7,5,['технециум','technetium'],2157,4265,1937,'Первый искусственный элемент.'],
+[44,'Ru','Рутений','101.07','Переходный металл',8,5,['рутениум','ruthenium'],2334,4150,1844,'Катализаторы, электроника.'],
+[45,'Rh','Родий','102.91','Переходный металл',9,5,['родиум','rhodium'],1964,3695,1803,'Очень дорогой. Катализаторы.'],
+[46,'Pd','Палладий','106.42','Переходный металл',10,5,['палладиум','palladium'],1555,2963,1803,'Катализаторы, ювелирка.'],
+[47,'Ag','Серебро','107.87','Переходный металл',11,5,['аргентум','argentum','silver'],962,2162,'доист.','Лучший проводник.'],
+[48,'Cd','Кадмий','112.41','Переходный металл',12,5,['кадмиум','cadmium'],321,767,1817,'Токсичен. Батарейки.'],
+[49,'In','Индий','114.82','Постпереходный металл',13,5,['индиум','indium'],157,2072,1863,'Тачскрины (ITO).'],
+[50,'Sn','Олово','118.71','Постпереходный металл',14,5,['станнум','stannum','tin'],232,2602,'доист.','Бронза, припои.'],
+[51,'Sb','Сурьма','121.76','Полуметалл',15,5,['стибиум','stibium','antimony'],631,1587,'доист.','Сплавы, огнезащита.'],
+[52,'Te','Теллур','127.60','Полуметалл',16,5,['теллуриум','tellurium'],450,988,1782,'Солнечные панели.'],
+[53,'I','Йод','126.90','Галоген',17,5,['йод','иод','иодум','iodum','iodine'],114,184,1811,'Щитовидная железа.'],
+[54,'Xe','Ксенон','131.29','Благородный газ',18,5,['ксенон','xenon'],-112,-108,1898,'Мощные лампы, анестетик.'],
+[55,'Cs','Цезий','132.91','Щелочной металл',1,6,['цезиум','цезий','caesium','cesium'],28,671,1860,'Атомные часы.'],
+[56,'Ba','Барий','137.33','Щёлочноземельный металл',2,6,['бариум','barium'],727,1897,1808,'Рентген-контраст.'],
+[57,'La','Лантан','138.91','Лантаноид',3,6,['лантанум','lanthanum'],920,3464,1839,'Оптика, катализаторы.'],
+[58,'Ce','Церий','140.12','Лантаноид',3,6,['цериум','cerium'],795,3443,1803,'Кремни, катализаторы.'],
+[59,'Pr','Празеодим','140.91','Лантаноид',3,6,['празеодимум','praseodymium'],935,3520,1885,'Мощные магниты.'],
+[60,'Nd','Неодим','144.24','Лантаноид',3,6,['неодимум','neodymium'],1024,3074,1885,'Неодимовые магниты.'],
+    [61,'Pm','Прометий','145','Лантаноид',3,6,['прометиум','promethium'],1042,3000,1945,'Радиоактивный.'],
+[62,'Sm','Самарий','150.36','Лантаноид',3,6,['самариум','samarium'],1072,1794,1879,'Магниты SmCo.'],
+[63,'Eu','Европий','151.96','Лантаноид',3,6,['европиум','europium'],822,1529,1901,'Красное свечение.'],
+[64,'Gd','Гадолиний','157.25','Лантаноид',3,6,['гадолиниум','gadolinium'],1312,3273,1880,'Контраст для МРТ.'],
+[65,'Tb','Тербий','158.93','Лантаноид',3,6,['тербиум','terbium'],1356,3230,1843,'Зелёное свечение.'],
+[66,'Dy','Диспрозий','162.50','Лантаноид',3,6,['диспрозиум','dysprosium'],1412,2567,1886,'Магниты, электромобили.'],
+[67,'Ho','Гольмий','164.93','Лантаноид',3,6,['гольмиум','holmium'],1474,2700,1878,'Медицинские лазеры.'],
+[68,'Er','Эрбий','167.26','Лантаноид',3,6,['эрбиум','erbium'],1529,2868,1843,'Оптоволокно.'],
+[69,'Tm','Тулий','168.93','Лантаноид',3,6,['тулиум','thulium'],1545,1950,1879,'Рентген-аппараты.'],
+[70,'Yb','Иттербий','173.05','Лантаноид',3,6,['иттербиум','ytterbium'],824,1196,1878,'Атомные часы.'],
+[71,'Lu','Лютеций','174.97','Лантаноид',3,6,['лютециум','lutetium'],1663,3402,1907,'Детекторы, онкология.'],
+[72,'Hf','Гафний','178.49','Переходный металл',4,6,['гафниум','hafnium'],2233,4603,1923,'Ядерные реакторы.'],
+[73,'Ta','Тантал','180.95','Переходный металл',5,6,['танталум','tantalum'],3017,5458,1802,'Конденсаторы, импланты.'],
+[74,'W','Вольфрам','183.84','Переходный металл',6,6,['вольфрамиум','wolframium','wolfram','tungsten'],3422,5555,1783,'Максимальная T плавления.'],
+[75,'Re','Рений','186.21','Переходный металл',7,6,['рениум','rhenium'],3186,5596,1925,'Жаропрочные сплавы.'],
+[76,'Os','Осмий','190.23','Переходный металл',8,6,['осмиум','osmium'],3033,5012,1803,'Самый плотный элемент.'],
+[77,'Ir','Иридий','192.22','Переходный металл',9,6,['иридиум','iridium'],2466,4428,1803,'Свечи зажигания.'],
+[78,'Pt','Платина','195.08','Переходный металл',10,6,['платинум','platinum'],1768,3825,1735,'Драгоценный. Катализаторы.'],
+[79,'Au','Золото','196.97','Переходный металл',11,6,['аурум','aurum','gold'],1064,2856,'доист.','Драгоценный. Химически инертен.'],
+[80,'Hg','Ртуть','200.59','Переходный металл',12,6,['гидраргирум','hydrargyrum','mercury'],-39,357,'доист.','Жидкий металл. Ядовит.'],
+[81,'Tl','Таллий','204.38','Постпереходный металл',13,6,['таллиум','thallium'],304,1473,1861,'Высокотоксичен.'],
+[82,'Pb','Свинец','207.2','Постпереходный металл',14,6,['плюмбум','plumbum','lead'],327,1749,'доист.','Тяжёлый, токсичный. Аккумуляторы.'],
+[83,'Bi','Висмут','208.98','Постпереходный металл',15,6,['бисмутум','bismuthum','bismuth'],271,1564,'доист.','Радужные кристаллы.'],
+[84,'Po','Полоний','209','Постпереходный металл',16,6,['полониум','polonium'],254,962,1898,'Радиоактивный. Кюри.'],
+[85,'At','Астат','210','Галоген',17,6,['астатум','астатин','astatum','astatine'],302,337,1940,'Самый редкий природный.'],
+[86,'Rn','Радон','222','Благородный газ',18,6,['радон','radon'],-71,-62,1899,'Радиоактивный газ.'],
+[87,'Fr','Франций','223','Щелочной металл',1,7,['франциум','francium'],27,677,1939,'Самый редкий щелочной.'],
+[88,'Ra','Радий','226','Щёлочноземельный металл',2,7,['радий','radium'],700,1737,1898,'Светится в темноте.'],
+[89,'Ac','Актиний','227','Актиноид',3,7,['актиниум','actinium'],1050,3200,1899,'Голубое свечение.'],
+[90,'Th','Торий','232.04','Актиноид',3,7,['ториум','thorium'],1750,4788,1829,'Ядерное топливо.'],
+[91,'Pa','Протактиний','231.04','Актиноид',3,7,['протактиниум','protactinium'],1572,4000,1913,'Радиоактивный.'],
+[92,'U','Уран','238.03','Актиноид',3,7,['ураниум','уран','uranium'],1132,4131,1789,'Ядерное топливо.'],
+[93,'Np','Нептуний','237','Актиноид',3,7,['нептуниум','neptunium'],644,3902,1940,'Первый трансурановый.'],
+[94,'Pu','Плутоний','244','Актиноид',3,7,['плутониум','plutonium'],639,3228,1940,'Ядерное топливо.'],
+[95,'Am','Америций','243','Актиноид',3,7,['америциум','americium'],1176,2607,1944,'Дымовые датчики.'],
+[96,'Cm','Кюрий','247','Актиноид',3,7,['кюриум','curium'],1340,3110,1944,'Космические источники.'],
+[97,'Bk','Берклий','247','Актиноид',3,7,['берклиум','berkelium'],986,2627,1949,'Синтетический.'],
+[98,'Cf','Калифорний','251','Актиноид',3,7,['калифорниум','californium'],900,1472,1950,'Источник нейтронов.'],
+[99,'Es','Эйнштейний','252','Актиноид',3,7,['эйнштейниум','einsteinium'],860,996,1952,'В честь Эйнштейна.'],
+[100,'Fm','Фермий','257','Актиноид',3,7,['фермиум','fermium'],1527,null,1952,'В честь Ферми.'],
+[101,'Md','Менделевий','258','Актиноид',3,7,['менделевиум','mendelevium'],827,null,1955,'В честь Менделеева.'],
+[102,'No','Нобелий','259','Актиноид',3,7,['нобелиум','nobelium'],827,null,1966,'В честь Нобеля.'],
+[103,'Lr','Лоуренсий','266','Актиноид',3,7,['лоуренсиум','lawrencium'],1627,null,1961,'В честь Лоуренса.'],
+[104,'Rf','Резерфордий','267','Переходный металл',4,7,['резерфордиум','rutherfordium'],2100,5500,1964,'В честь Резерфорда.'],
+[105,'Db','Дубний','268','Переходный металл',5,7,['дубниум','dubnium'],null,null,1967,'В честь Дубны.'],
+[106,'Sg','Сиборгий','269','Переходный металл',6,7,['сиборгиум','seaborgium'],null,null,1974,'В честь Сиборга.'],
+[107,'Bh','Борий','270','Переходный металл',7,7,['бориум','bohrium'],null,null,1981,'В честь Бора.'],
+[108,'Hs','Хассий','269','Переходный металл',8,7,['хассиум','hassium'],null,null,1984,'В честь Гессена.'],
+[109,'Mt','Мейтнерий','278','Переходный металл',9,7,['мейтнериум','meitnerium'],null,null,1982,'В честь Лизы Мейтнер.'],
+[110,'Ds','Дармштадтий','281','Переходный металл',10,7,['дармштадтиум','darmstadtium'],null,null,1994,'В честь Дармштадта.'],
+[111,'Rg','Рентгений','282','Переходный металл',11,7,['рентгениум','roentgenium'],null,null,1994,'В честь Рентгена.'],
+[112,'Cn','Коперниций','285','Постпереходный металл',12,7,['копернициум','copernicium'],null,null,1996,'В честь Коперника.'],
+[113,'Nh','Нихоний','286','Постпереходный металл',13,7,['нихониум','nihonium'],null,null,2004,'Открыт в Японии.'],
+[114,'Fl','Флеровий','289','Постпереходный металл',14,7,['флеровиум','flerovium'],null,null,1999,'В честь Флёрова.'],
+[115,'Mc','Московий','290','Постпереходный металл',15,7,['московиум','moscovium'],null,null,2003,'Открыт в Дубне.'],
+[116,'Lv','Ливерморий','293','Постпереходный металл',16,7,['ливермориум','livermorium'],null,null,2000,'В честь Ливермора.'],
+[117,'Ts','Теннессин','294','Галоген',17,7,['теннессин','tennessine'],null,null,2010,'Открыт в США.'],
+[118,'Og','Оганесон','294','Благородный газ',18,7,['оганесон','oganesson'],null,null,2002,'Самый тяжёлый известный.']
+];
+
+var COMPOUNDS = [
+    {name:'Вода', formula:'H2O', desc:'оксид водорода'},
+    {name:'Углекислый газ', formula:'CO2', desc:'диоксид углерода'},
+    {name:'Поваренная соль', formula:'NaCl', desc:'хлорид натрия'},
+    {name:'Серная кислота', formula:'H2SO4', desc:'сильная кислота'},
+    {name:'Аммиак', formula:'NH3', desc:'нитрид водорода'},
+    {name:'Метан', formula:'CH4', desc:'простейший углеводород'},
+    {name:'Глюкоза', formula:'C6H12O6', desc:'моносахарид'},
+    {name:'Спирт этиловый', formula:'C2H5OH', desc:'этанол'},
+    {name:'Угарный газ', formula:'CO', desc:'монооксид углерода'},
+    {name:'Озон', formula:'O3', desc:'модификация кислорода'},
+    {name:'Перекись водорода', formula:'H2O2', desc:'пероксид водорода'},
+    {name:'Сода пищевая', formula:'NaHCO3', desc:'гидрокарбонат натрия'},
+    {name:'Известь', formula:'CaCO3', desc:'карбонат кальция'}
+];
+
+var FUN = {
+    num: 999, sym: 'Kb', name: 'Коч-Братаниум',
+    mass: '???', cat: 'Меметический элемент', group: '—', period: '—',
+    aliases: ['коч','братаниум','коч-братаниум','кочбратаниум','koch','bratanium','kochbratanium'],
+    melt: null, boil: null, year: 'наши дни',
+    desc: 'Легендарный элемент, открыт в курилке.'
+};
+
+var DB = [];
+ELEMENTS.forEach(function(e){
+    DB.push({
+        type:'el', num:e[0], sym:e[1], name:e[2], mass:e[3],
+        cat:e[4], group:e[5], period:e[6], aliases:e[7],
+        melt:e[8], boil:e[9], year:e[10], desc:e[11],
+        formula:e[1], display:e[1]
+    });
+});
+COMPOUNDS.forEach(function(c){
+    DB.push({type:'comp', name:c.name, formula:c.formula, display:c.formula, desc:c.desc, aliases:[]});
+});
+DB.push({
+    type:'fun', num:FUN.num, sym:FUN.sym, name:FUN.name, mass:FUN.mass,
+    cat:FUN.cat, group:FUN.group, period:FUN.period, aliases:FUN.aliases,
+    melt:FUN.melt, boil:FUN.boil, year:FUN.year, desc:FUN.desc,
+    formula:FUN.sym, display:FUN.sym
+});
+    var input = document.getElementById('search');
+    var results = document.getElementById('results');
+    var counter = document.getElementById('counter');
+    var statusLine = document.getElementById('statusLine');
+    var versionLine = document.getElementById('versionLine');
+    var modal = document.getElementById('modal');
+    var modalContent = document.getElementById('modalContent');
+    var closeBtn = document.getElementById('closeBtn');
+    var updModal = document.getElementById('updModal');
+    var updOpenBtn = document.getElementById('updOpenBtn');
+    var updCloseBtn = document.getElementById('updCloseBtn');
+    var updStatus = document.getElementById('updStatus');
+    var updUrl = document.getElementById('updUrl');
+    var updFetchBtn = document.getElementById('updFetchBtn');
+    var updResetBtn = document.getElementById('updResetBtn');
+
+    function esc(s){
+        if (s === null || s === undefined) return '—';
+        return String(s).replace(/[&<>"']/g, function(c){
+            return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+        });
+    }
+
+    function getSavedHtml() {
+        try { return localStorage.getItem(LS_HTML_KEY); } catch(e) { return null; }
+    }
+    function getSavedDate() {
+        try { return localStorage.getItem(LS_DATE_KEY); } catch(e) { return null; }
+    }
+    function isSaved() { return !!getSavedHtml(); }
+
+    function updateStatus() {
+        var saved = isSaved();
+        var date = getSavedDate();
+        if (saved) {
+            var d = date ? new Date(date) : null;
+            var dStr = d ? d.toLocaleDateString('ru-RU') + ' ' + d.toLocaleTimeString('ru-RU', {hour:'2-digit',minute:'2-digit'}) : '';
+            statusLine.textContent = '📦 офлайн · обновлено ' + dStr;
+            versionLine.textContent = 'v2.1-offline · обновлённая версия';
+        } else {
+            statusLine.textContent = '📦 офлайн · встроенная';
+            versionLine.textContent = 'v2.1-offline · встроенная версия';
+        }
+        counter.textContent = '✓ Загружено: ' + DB.length + ' записей';
+    }
+
+    function search(q){
+        var s = q.trim().toLowerCase();
+        if (!s) return [];
+        var out = [];
+        for (var i = 0; i < DB.length; i++){
+            var item = DB[i], best = 0, matchedBy = '';
+            if (item.name){
+                var ln = item.name.toLowerCase();
+                if (ln === s) { best = Math.max(best, 1000); matchedBy = 'name'; }
+                else if (ln.indexOf(s) === 0) { best = Math.max(best, 500); matchedBy = 'name'; }
+                else if (ln.indexOf(s) !== -1) { best = Math.max(best, 100); matchedBy = 'name'; }
+            }
+            if (item.sym){
+                var ls = item.sym.toLowerCase();
+                if (ls === s) { best = Math.max(best, 1050); matchedBy = 'sym'; }
+                else if (ls.indexOf(s) === 0) { best = Math.max(best, 550); matchedBy = 'sym'; }
+            }
+            if (item.formula){
+                var lf = item.formula.toLowerCase();
+                if (lf === s) { best = Math.max(best, 1050); matchedBy = 'formula'; }
+                else if (lf.indexOf(s) === 0) { best = Math.max(best, 550); matchedBy = 'formula'; }
+            }
+            if (item.aliases){
+                for (var k = 0; k < item.aliases.length; k++){
+                    var la = item.aliases[k].toLowerCase();
+                    if (la === s) { best = Math.max(best, 950); if (!matchedBy) matchedBy = 'alias'; }
+                    else if (la.indexOf(s) === 0) { best = Math.max(best, 480); if (!matchedBy) matchedBy = 'alias'; }
+                    else if (la.indexOf(s) !== -1) { best = Math.max(best, 90); if (!matchedBy) matchedBy = 'alias'; }
+                }
+            }
+            if (best > 0) out.push({ item: item, score: best, matchedBy: matchedBy });
+        }
+        out.sort(function(a, b){
+            if (b.score !== a.score) return b.score - a.score;
+            return (a.item.name || '').localeCompare(b.item.name || '');
+        });
+        return out;
+    }
+
+    function render(q){
+        if (!q.trim()){
+            results.innerHTML = '<div class="empty">Введите запрос — здесь появятся совпадения<br><br>Нажмите на элемент, чтобы увидеть всю информацию</div>';
+            return;
+        }
+        var matches = search(q);
+        if (!matches.length){
+            results.innerHTML = '<div class="empty">🔍 Ничего не найдено<br>Попробуйте другое название, символ или произношение</div>';
+            return;
+        }
+        var html = '';
+        for (var i = 0; i < matches.length; i++){
+            var m = matches[i], it = m.item;
+            var cls = 'row' + (i === 0 ? ' best' : '') + (it.type === 'fun' ? ' fun' : '');
+            var aliasIcon = m.matchedBy === 'alias' ? ' 🔊' : '';
+            var meta = '';
+            if (it.type === 'el') meta = '№' + it.num + ' · ' + it.cat;
+            else if (it.type === 'comp') meta = it.desc || 'соединение';
+            else meta = it.cat;
+            html += '<div class="' + cls + '" data-idx="' + i + '">'
+                + '<div class="sym">' + esc(it.display) + '</div>'
+                + '<div class="info"><div class="name">' + esc(it.name) + aliasIcon + '</div>'
+                + '<div class="meta">' + esc(meta) + '</div></div>'
+                + '<div class="formula">' + esc(it.formula) + '</div>'
+                + '</div>';
+        }
+        results.innerHTML = html;
+        window.__matches = matches;
+        var rows = results.querySelectorAll('.row');
+        for (var j = 0; j < rows.length; j++){
+            rows[j].addEventListener('click', function(){
+                var idx = parseInt(this.getAttribute('data-idx'), 10);
+                if (window.__matches && window.__matches[idx]) openModal(window.__matches[idx].item);
+            });
+        }
+    }
+
+    function openModal(item){
+        var html = '';
+        html += '<div class="m-head"><div class="m-sym">' + esc(item.display) + '</div>'
+            + '<div class="m-name"><h2>' + esc(item.name) + '</h2>'
+            + '<p>' + (item.type === 'el' ? 'Элемент №' + item.num : (item.type === 'comp' ? 'Химическое соединение' : 'Пасхалка')) + '</p>'
+            + '</div></div>';
+        if (item.aliases && item.aliases.length){
+            html += '<div class="m-pron"><div class="m-pron-label">🔊 Произношение / альтернативные названия:</div><div class="m-pron-list">';
+            for (var i = 0; i < item.aliases.length; i++){
+                html += '<span>' + esc(item.aliases[i]) + '</span>';
+            }
+            html += '</div></div>';
+        }
+        html += '<div class="m-table">';
+        if (item.type === 'el' || item.type === 'fun'){
+            html += '<div class="m-row"><span class="k">Символ</span><span class="v">' + esc(item.sym) + '</span></div>';
+            html += '<div class="m-row"><span class="k">Атомный номер</span><span class="v">' + esc(item.num) + '</span></div>';
+            html += '<div class="m-row"><span class="k">Атомная масса</span><span class="v">' + esc(item.mass) + ' а.е.м.</span></div>';
+            html += '<div class="m-row"><span class="k">Категория</span><span class="v">' + esc(item.cat) + '</span></div>';
+            html += '<div class="m-row"><span class="k">Группа</span><span class="v">' + esc(item.group) + '</span></div>';
+            html += '<div class="m-row"><span class="k">Период</span><span class="v">' + esc(item.period) + '</span></div>';
+            html += '<div class="m-row"><span class="k">T плавления</span><span class="v">' + (item.melt !== null && item.melt !== undefined ? esc(item.melt) + ' °C' : '—') + '</span></div>';
+            html += '<div class="m-row"><span class="k">T кипения</span><span class="v">' + (item.boil !== null && item.boil !== undefined ? esc(item.boil) + ' °C' : '—') + '</span></div>';
+            html += '<div class="m-row"><span class="k">Год открытия</span><span class="v">' + esc(item.year) + '</span></div>';
+        } else if (item.type === 'comp'){
+            html += '<div class="m-row"><span class="k">Формула</span><span class="v">' + esc(item.formula) + '</span></div>';
+            html += '<div class="m-row"><span class="k">Тип</span><span class="v">' + esc(item.desc || 'соединение') + '</span></div>';
+        }
+        html += '</div>';
+        if (item.desc) html += '<div class="m-desc">' + esc(item.desc) + '</div>';
+        modalContent.innerHTML = html;
+        modal.classList.add('show');
+        modal.scrollTop = 0;
+    }
+    function closeModal(){ modal.classList.remove('show'); }
+    closeBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', function(e){ if (e.target === modal) closeModal(); });
+    document.addEventListener('keydown', function(e){ if (e.key === 'Escape'){ closeModal(); updModal.classList.remove('show'); } });
+
+    function getUpdateUrl(){
+        try { return localStorage.getItem(LS_URL_KEY) || DEFAULT_URL; } catch(e) { return DEFAULT_URL; }
+    }
+    function setUpdateUrl(u){
+        try { localStorage.setItem(LS_URL_KEY, u); } catch(e) {}
+    }
+
+    function openUpdModal(){
+        updUrl.value = getUpdateUrl();
+        var saved = isSaved();
+        var date = getSavedDate();
+        if (saved && date){
+            var d = new Date(date);
+            updStatus.className = 'upd-status info';
+            updStatus.innerHTML = '📦 <b>Используется обновлённая версия</b><br>Загружена: ' + d.toLocaleString('ru-RU');
+        } else {
+            updStatus.className = 'upd-status info';
+            updStatus.innerHTML = '📦 <b>Встроенная версия</b><br>Обновлений ещё не было.';
+        }
+        updFetchBtn.disabled = false;
+        updFetchBtn.textContent = 'Загрузить и применить';
+        updModal.classList.add('show');
+    }
+    function closeUpdModal(){ updModal.classList.remove('show'); }
+    updOpenBtn.addEventListener('click', openUpdModal);
+    updCloseBtn.addEventListener('click', closeUpdModal);
+    updModal.addEventListener('click', function(e){ if (e.target === updModal) closeUpdModal(); });
+    updUrl.addEventListener('change', function(){ setUpdateUrl(updUrl.value.trim()); });
+
+    updFetchBtn.addEventListener('click', function(){
+        var url = updUrl.value.trim();
+        if (!url){ updStatus.className = 'upd-status err'; updStatus.textContent = 'Укажите URL'; return; }
+        setUpdateUrl(url);
+        updFetchBtn.disabled = true;
+        updFetchBtn.innerHTML = '<span class="spinner"></span> Загрузка...';
+        updStatus.className = 'upd-status info';
+        updStatus.textContent = 'Скачиваем HTML...';
+        fetch(url, { cache: 'no-store', mode: 'cors' })
+            .then(function(r){
+                if (!r.ok) throw new Error('HTTP ' + r.status);
+                return r.text();
+            })
+            .then(function(html){
+                if (!html || html.length < 500) throw new Error('Слишком маленький ответ');
+                if (html.indexOf('<html') === -1 && html.indexOf('<!DOCTYPE') === -1) throw new Error('Это не HTML');
+                try {
+                    localStorage.setItem(LS_HTML_KEY, html);
+                    localStorage.setItem(LS_DATE_KEY, new Date().toISOString());
+                } catch(e) { throw new Error('Не удалось сохранить: ' + e.message); }
+                updStatus.className = 'upd-status ok';
+                updStatus.innerHTML = '✅ <b>Успешно!</b><br>Скачано ' + Math.round(html.length/1024) + ' KB. Перезагрузка...';
+                setTimeout(function(){ window.name = ''; location.reload(); }, 800);
+            })
+            .catch(function(err){
+                updStatus.className = 'upd-status err';
+                updStatus.innerHTML = '❌ <b>Ошибка:</b><br>' + err.message;
+                updFetchBtn.disabled = false;
+                updFetchBtn.textContent = 'Загрузить и применить';
+            });
+    });
+
+    updResetBtn.addEventListener('click', function(){
+        if (!isSaved()){ updStatus.className = 'upd-status info'; updStatus.textContent = 'Уже встроенная.'; return; }
+        if (!confirm('Удалить сохранённую версию?')) return;
+        try {
+            localStorage.removeItem(LS_HTML_KEY);
+            localStorage.removeItem(LS_DATE_KEY);
+        } catch(e) {}
+        window.name = '';
+        location.reload();
+    });
+
+    input.addEventListener('input', function(){ render(input.value); });
+    var hintEls = document.querySelectorAll('#hints code');
+    for (var i = 0; i < hintEls.length; i++){
+        hintEls[i].addEventListener('click', function(){
+            var q = this.getAttribute('data-q');
+            input.value = q;
+            render(q);
+        });
+    }
+    render('');
+    updateStatus();
+    console.log('✅ ChemSearch v2.1-offline loaded. Records:', DB.length, '| Saved:', isSaved());
+})();
+</script>
+</body>
+</html>

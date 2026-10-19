@@ -4,128 +4,80 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#0b1a2e">
-<meta name="app-version" content="2.1-offline">
 <title>Химические элементы</title>
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-html, body { height: 100%; overflow: hidden; }
-body {
-    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-    background: #0b1a2e; display: flex; padding: 8px;
-    padding-top: max(8px, env(safe-area-inset-top));
-    padding-bottom: max(8px, env(safe-area-inset-bottom));
-    height: 100vh; height: 100dvh;
-}
-.app { flex: 1; min-height: 0; display: flex; flex-direction: column;
-    background: #16263a; border-radius: 20px; padding: 14px;
-    border: 1px solid #2b4a70; overflow: hidden; }
-.top { flex-shrink: 0; }
-.header-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
-h1 { font-size: 1rem; color: #eef5ff; font-weight: 500; }
-h1 b { color: #5fb8ff; }
-.upd-btn { background: #0d1f30; border: 1px solid #2b4a70; color: #b6d6ff;
-    padding: 5px 10px; border-radius: 20px; font-size: 0.72rem;
-    cursor: pointer; display: flex; gap: 4px; align-items: center; }
-.upd-btn:active { background: #17344d; }
-.search-wrap { position: relative; margin-bottom: 6px; }
-#search { width: 100%; padding: 11px 14px 11px 38px; font-size: 16px;
-    border-radius: 40px; border: 1.5px solid #2b4a70; background: #0e1d2f;
-    color: #f0f7ff; outline: none; }
-#search:focus { border-color: #3f9eff; box-shadow: 0 0 0 3px rgba(63,158,255,0.2); }
-.icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); pointer-events: none; }
-.counter { font-size: 11px; color: #7ea3cc; margin-bottom: 6px; min-height: 14px;
-    display: flex; justify-content: space-between; gap: 8px; }
-.counter .status { font-size: 10px; color: #5a7ea3; }
-#results { flex: 1; min-height: 0; overflow-y: auto; display: flex;
-    flex-direction: column; gap: 5px; -webkit-overflow-scrolling: touch; }
-.empty { color: #7c9ac0; text-align: center; padding: 24px 8px;
-    font-size: 0.9rem; line-height: 1.5; }
-.row { display: flex; align-items: center; gap: 10px; padding: 9px 12px;
-    background: #0d1f30; border-radius: 12px; border: 1px solid #203a55;
-    cursor: pointer; flex-shrink: 0; }
-.row:active { background: #17344d; }
-.row.best { border-color: #4f9cff; background: linear-gradient(135deg, #122c45, #1b3d5c); }
-.row.fun { border: 1.5px solid #b84bff;
-    background: linear-gradient(90deg, rgba(255,75,139,0.18), rgba(75,185,255,0.18), rgba(184,75,255,0.18)); }
-.sym { font-size: 1.3rem; font-weight: 800; color: #6fc5ff; min-width: 46px;
-    text-align: center; flex-shrink: 0; }
-.row.fun .sym { color: #e97bff; }
-.info { flex: 1; min-width: 0; }
-.name { font-size: 0.92rem; color: #e0eeff; font-weight: 500;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.meta { font-size: 0.72rem; color: #7ea3cc; white-space: nowrap;
-    overflow: hidden; text-overflow: ellipsis; }
-.formula { font-family: monospace; background: #0a1929; color: #8fc5ff;
-    padding: 4px 9px; border-radius: 30px; font-size: 0.8rem;
-    font-weight: 600; border: 1px solid #1d3f60; flex-shrink: 0; }
-.hints { flex-shrink: 0; display: flex; flex-wrap: wrap; gap: 5px;
-    margin-top: 8px; justify-content: center; }
-.hints code { padding: 4px 10px; background: #0a1a2a; border: 1px solid #24476b;
-    border-radius: 30px; color: #b6d6ff; font-family: monospace;
-    font-size: 0.72rem; cursor: pointer; user-select: none; }
-.hints code:active { background: #1e3a5a; }
-.version { font-size: 10px; color: #41678b; text-align: center;
-    margin-top: 6px; flex-shrink: 0; }
-.modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85);
-    z-index: 1000; padding: 12px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
-.modal.show { display: block; }
-.modal-inner { background: #16263a; border-radius: 20px; padding: 20px 18px;
-    max-width: 500px; margin: 20px auto; border: 1px solid #3f7bc0;
-    position: relative; box-shadow: 0 20px 50px rgba(0,0,0,0.9); }
-.close-btn { position: absolute; top: 10px; right: 12px; width: 34px; height: 34px;
-    border-radius: 50%; background: #0d1f30; border: 1px solid #2b4a70;
-    color: #b6d6ff; font-size: 20px; line-height: 1; cursor: pointer;
-    display: flex; align-items: center; justify-content: center; }
-.close-btn:active { background: #17344d; }
-.m-head { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; padding-right: 40px; }
-.m-sym { font-size: 3.2rem; font-weight: 900; color: #6fc5ff; line-height: 1; min-width: 70px; text-align: center; }
-.m-name { flex: 1; min-width: 0; }
-.m-name h2 { font-size: 1.3rem; color: #eef5ff; font-weight: 600; margin-bottom: 3px; }
-.m-name p { font-size: 0.8rem; color: #7ea3cc; }
-.m-pron { margin-bottom: 14px; padding: 10px 12px; background: #0d1f30;
-    border-radius: 12px; border: 1px solid #203a55; }
-.m-pron-label { font-size: 0.72rem; color: #7ea3cc; margin-bottom: 6px; }
-.m-pron-list { display: flex; flex-wrap: wrap; gap: 5px; }
-.m-pron-list span { background: #0a1929; color: #a0c8ee; padding: 3px 10px;
-    border-radius: 20px; font-size: 0.78rem; border: 1px solid #1d3f60; font-family: monospace; }
-.m-table { display: flex; flex-direction: column; gap: 1px; }
-.m-row { display: flex; justify-content: space-between; gap: 12px;
-    padding: 9px 12px; background: #0d1f30; font-size: 0.85rem; }
-.m-row:first-child { border-radius: 10px 10px 0 0; }
-.m-row:last-child { border-radius: 0 0 10px 10px; }
-.m-row .k { color: #7ea3cc; flex-shrink: 0; }
-.m-row .v { color: #e0eeff; font-weight: 500; text-align: right; word-break: break-word; }
-.m-desc { margin-top: 14px; padding: 12px; background: #0d1f30;
-    border-radius: 12px; border-left: 3px solid #3f7bc0;
-    color: #c6dcf3; font-size: 0.87rem; line-height: 1.5; }
-.upd-inner { max-width: 460px; }
-.upd-title { font-size: 1.1rem; color: #eef5ff; margin-bottom: 12px; padding-right: 40px; font-weight: 600; }
-.upd-status { padding: 10px 12px; background: #0d1f30; border-radius: 10px;
-    font-size: 0.85rem; color: #c6dcf3; margin-bottom: 12px;
-    border-left: 3px solid #4f9cff; line-height: 1.5; }
-.upd-status.err { border-left-color: #d95a5a; color: #f3c6c6; }
-.upd-status.ok { border-left-color: #4bd47a; color: #c6f3d2; }
-.upd-status.info { border-left-color: #7ea3cc; color: #c6dcf3; }
-.upd-label { font-size: 0.78rem; color: #7ea3cc; margin-bottom: 6px; display: block; }
-#updUrl { width: 100%; padding: 10px 12px; background: #0a1929;
-    border: 1px solid #2b4a70; border-radius: 10px; color: #a0c8ee;
-    font-family: monospace; font-size: 0.8rem; outline: none; margin-bottom: 10px; }
-#updUrl:focus { border-color: #3f9eff; }
-.upd-btns { display: flex; gap: 8px; flex-wrap: wrap; }
-.upd-btns button { flex: 1; min-width: 120px; padding: 11px 14px;
-    border-radius: 30px; border: none; cursor: pointer; font-size: 0.88rem; font-weight: 600; }
-.btn-primary { background: linear-gradient(135deg, #3a7bd5, #4fa3ff); color: #fff; }
-.btn-primary:active { background: linear-gradient(135deg, #2f6eb0, #3f8fe0); }
-.btn-primary:disabled { background: #2a4560; color: #7e9ab8; cursor: not-allowed; }
-.btn-secondary { background: #0d1f30; color: #b6d6ff; border: 1px solid #2b4a70 !important; }
-.btn-secondary:active { background: #17344d; }
-.upd-note { font-size: 0.72rem; color: #6d8eb2; margin-top: 12px;
-    line-height: 1.5; padding-top: 10px; border-top: 1px dashed #2b4a70; }
-.spinner { display: inline-block; width: 12px; height: 12px;
-    border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff;
-    border-radius: 50%; animation: spin 0.8s linear infinite;
-    vertical-align: middle; margin-right: 6px; }
-@keyframes spin { to { transform: rotate(360deg); } }
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden}
+body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background:#0b1a2e;display:flex;padding:8px;padding-top:max(8px,env(safe-area-inset-top));padding-bottom:max(8px,env(safe-area-inset-bottom));height:100vh;height:100dvh}
+.app{flex:1;min-height:0;display:flex;flex-direction:column;background:#16263a;border-radius:20px;padding:14px;border:1px solid #2b4a70;overflow:hidden}
+.top{flex-shrink:0}
+.header-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+h1{font-size:1rem;color:#eef5ff;font-weight:500}
+h1 b{color:#5fb8ff}
+.upd-btn{background:#0d1f30;border:1px solid #2b4a70;color:#b6d6ff;padding:5px 10px;border-radius:20px;font-size:.72rem;cursor:pointer;display:flex;gap:4px;align-items:center}
+.upd-btn:active{background:#17344d}
+.search-wrap{position:relative;margin-bottom:6px}
+#search{width:100%;padding:11px 14px 11px 38px;font-size:16px;border-radius:40px;border:1.5px solid #2b4a70;background:#0e1d2f;color:#f0f7ff;outline:none}
+#search:focus{border-color:#3f9eff;box-shadow:0 0 0 3px rgba(63,158,255,.2)}
+.icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);pointer-events:none}
+.counter{font-size:11px;color:#7ea3cc;margin-bottom:6px;min-height:14px;display:flex;justify-content:space-between;gap:8px}
+.counter .status{font-size:10px;color:#5a7ea3}
+#results{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:5px;-webkit-overflow-scrolling:touch}
+.empty{color:#7c9ac0;text-align:center;padding:24px 8px;font-size:.9rem;line-height:1.5}
+.row{display:flex;align-items:center;gap:10px;padding:9px 12px;background:#0d1f30;border-radius:12px;border:1px solid #203a55;cursor:pointer;flex-shrink:0}
+.row:active{background:#17344d}
+.row.best{border-color:#4f9cff;background:linear-gradient(135deg,#122c45,#1b3d5c)}
+.row.fun{border:1.5px solid #b84bff;background:linear-gradient(90deg,rgba(255,75,139,.18),rgba(75,185,255,.18),rgba(184,75,255,.18))}
+.sym{font-size:1.3rem;font-weight:800;color:#6fc5ff;min-width:46px;text-align:center;flex-shrink:0}
+.row.fun .sym{color:#e97bff}
+.info{flex:1;min-width:0}
+.name{font-size:.92rem;color:#e0eeff;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.meta{font-size:.72rem;color:#7ea3cc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.formula{font-family:monospace;background:#0a1929;color:#8fc5ff;padding:4px 9px;border-radius:30px;font-size:.8rem;font-weight:600;border:1px solid #1d3f60;flex-shrink:0}
+.hints{flex-shrink:0;display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;justify-content:center}
+.hints code{padding:4px 10px;background:#0a1a2a;border:1px solid #24476b;border-radius:30px;color:#b6d6ff;font-family:monospace;font-size:.72rem;cursor:pointer;user-select:none}
+.hints code:active{background:#1e3a5a}
+.version{font-size:10px;color:#41678b;text-align:center;margin-top:6px;flex-shrink:0}
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:1000;padding:12px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.modal.show{display:block}
+.modal-inner{background:#16263a;border-radius:20px;padding:20px 18px;max-width:500px;margin:20px auto;border:1px solid #3f7bc0;position:relative;box-shadow:0 20px 50px rgba(0,0,0,.9)}
+.close-btn{position:absolute;top:10px;right:12px;width:34px;height:34px;border-radius:50%;background:#0d1f30;border:1px solid #2b4a70;color:#b6d6ff;font-size:20px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.close-btn:active{background:#17344d}
+.m-head{display:flex;align-items:center;gap:14px;margin-bottom:14px;padding-right:40px}
+.m-sym{font-size:3.2rem;font-weight:900;color:#6fc5ff;line-height:1;min-width:70px;text-align:center}
+.m-name{flex:1;min-width:0}
+.m-name h2{font-size:1.3rem;color:#eef5ff;font-weight:600;margin-bottom:3px}
+.m-name p{font-size:.8rem;color:#7ea3cc}
+.m-pron{margin-bottom:14px;padding:10px 12px;background:#0d1f30;border-radius:12px;border:1px solid #203a55}
+.m-pron-label{font-size:.72rem;color:#7ea3cc;margin-bottom:6px}
+.m-pron-list{display:flex;flex-wrap:wrap;gap:5px}
+.m-pron-list span{background:#0a1929;color:#a0c8ee;padding:3px 10px;border-radius:20px;font-size:.78rem;border:1px solid #1d3f60;font-family:monospace}
+.m-table{display:flex;flex-direction:column;gap:1px}
+.m-row{display:flex;justify-content:space-between;gap:12px;padding:9px 12px;background:#0d1f30;font-size:.85rem}
+.m-row:first-child{border-radius:10px 10px 0 0}
+.m-row:last-child{border-radius:0 0 10px 10px}
+.m-row .k{color:#7ea3cc;flex-shrink:0}
+.m-row .v{color:#e0eeff;font-weight:500;text-align:right;word-break:break-word}
+.m-desc{margin-top:14px;padding:12px;background:#0d1f30;border-radius:12px;border-left:3px solid #3f7bc0;color:#c6dcf3;font-size:.87rem;line-height:1.5}
+.upd-inner{max-width:460px}
+.upd-title{font-size:1.1rem;color:#eef5ff;margin-bottom:12px;padding-right:40px;font-weight:600}
+.upd-status{padding:10px 12px;background:#0d1f30;border-radius:10px;font-size:.85rem;color:#c6dcf3;margin-bottom:12px;border-left:3px solid #4f9cff;line-height:1.5}
+.upd-status.err{border-left-color:#d95a5a;color:#f3c6c6}
+.upd-status.ok{border-left-color:#4bd47a;color:#c6f3d2}
+.upd-status.info{border-left-color:#7ea3cc;color:#c6dcf3}
+.upd-label{font-size:.78rem;color:#7ea3cc;margin-bottom:6px;display:block}
+#updUrl{width:100%;padding:10px 12px;background:#0a1929;border:1px solid #2b4a70;border-radius:10px;color:#a0c8ee;font-family:monospace;font-size:.8rem;outline:none;margin-bottom:10px}
+#updUrl:focus{border-color:#3f9eff}
+.upd-btns{display:flex;gap:8px;flex-wrap:wrap}
+.upd-btns button{flex:1;min-width:120px;padding:11px 14px;border-radius:30px;border:none;cursor:pointer;font-size:.88rem;font-weight:600}
+.btn-primary{background:linear-gradient(135deg,#3a7bd5,#4fa3ff);color:#fff}
+.btn-primary:active{background:linear-gradient(135deg,#2f6eb0,#3f8fe0)}
+.btn-primary:disabled{background:#2a4560;color:#7e9ab8;cursor:not-allowed}
+.btn-secondary{background:#0d1f30;color:#b6d6ff;border:1px solid #2b4a70!important}
+.btn-secondary:active{background:#17344d}
+.upd-note{font-size:.72rem;color:#6d8eb2;margin-top:12px;line-height:1.5;padding-top:10px;border-top:1px dashed #2b4a70}
+.spinner{display:inline-block;width:12px;height:12px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;vertical-align:middle;margin-right:6px}
+@keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
@@ -157,19 +109,21 @@ h1 b { color: #5fb8ff; }
         <code data-q="H2O">H2O</code>
         <code data-q="Au">Au</code>
     </div>
-    <div class="version" id="versionLine">v2.1-offline</div>
+    <div class="version" id="versionLine">v2.2-offline</div>
 </div>
+
 <div class="modal" id="modal">
     <div class="modal-inner">
         <button class="close-btn" id="closeBtn">×</button>
         <div id="modalContent"></div>
     </div>
 </div>
+
 <div class="modal" id="updModal">
     <div class="modal-inner upd-inner">
         <button class="close-btn" id="updCloseBtn">×</button>
-        <div class="upd-title">🔄 Обновление приложения</div>
-        <div class="upd-status info" id="updStatus">Текущая версия: загрузка...</div>
+        <div class="upd-title">🔄 Обновление данных</div>
+        <div class="upd-status info" id="updStatus">Загрузка...</div>
         <label class="upd-label" for="updUrl">URL для загрузки (raw GitHub):</label>
         <input id="updUrl" type="url" spellcheck="false" autocomplete="off">
         <div class="upd-btns">
@@ -177,21 +131,24 @@ h1 b { color: #5fb8ff; }
             <button class="btn-secondary" id="updResetBtn">↩ К встроенной</button>
         </div>
         <div class="upd-note">
-            💡 Загружается новый HTML с GitHub и сохраняется локально.
-            Приложение продолжит работать офлайн.
+            💡 Скачивается только база с GitHub, интерфейс остаётся прежний. Работает офлайн.
         </div>
     </div>
 </div>
+
 <script>
 (function(){
-    'use strict';
-    var DEFAULT_URL = 'https://raw.githubusercontent.com/Cheese1488/Elements/refs/heads/main/index.html';
-    var LS_URL_KEY = '__chem_update_url__';
-    var LS_HTML_KEY = '__chem_saved_html__';
-    var LS_DATE_KEY = '__chem_updated_at__';
-  var ELEMENTS = [
+'use strict';
+var DEFAULT_URL='https://raw.githubusercontent.com/Cheese1488/Elements/refs/heads/main/index.html';
+var LS_URL_KEY='__chem_update_url__';
+var LS_E='__chem_elements__';
+var LS_C='__chem_compounds__';
+var LS_F='__chem_fun__';
+var LS_D='__chem_updated_at__';
+
+var ELEMENTS=[
 [1,'H','Водород','1.008','Неметалл',1,1,['гидроген','hydrogen'],-259,-253,1766,'Самый лёгкий и распространённый элемент во Вселенной.'],
-[2,'He','Гелий','4.003','Благородный газ',18,1,['гелиум','helium'],-272,-269,1868,'Второй по лёгкости элемент. Инертный газ.'],
+[2,'He','Гелий','4.003','Благородный газ',18,1,['гелиум','helium'],-272,-269,1868,'Второй по лёгкости. Инертный газ.'],
 [3,'Li','Литий','6.94','Щелочной металл',1,2,['литиум','lithium'],181,1342,1817,'Самый лёгкий металл. Аккумуляторы.'],
 [4,'Be','Бериллий','9.012','Щёлочноземельный металл',2,2,['бериллиум','beryllium'],1287,2469,1798,'Лёгкий, но очень токсичный.'],
 [5,'B','Бор','10.81','Полуметалл',13,2,['борум','boron'],2076,3927,1808,'Стекло, керамика, полупроводники.'],
@@ -250,7 +207,7 @@ h1 b { color: #5fb8ff; }
 [58,'Ce','Церий','140.12','Лантаноид',3,6,['цериум','cerium'],795,3443,1803,'Кремни, катализаторы.'],
 [59,'Pr','Празеодим','140.91','Лантаноид',3,6,['празеодимум','praseodymium'],935,3520,1885,'Мощные магниты.'],
 [60,'Nd','Неодим','144.24','Лантаноид',3,6,['неодимум','neodymium'],1024,3074,1885,'Неодимовые магниты.'],
-    [61,'Pm','Прометий','145','Лантаноид',3,6,['прометиум','promethium'],1042,3000,1945,'Радиоактивный.'],
+[61,'Pm','Прометий','145','Лантаноид',3,6,['прометиум','promethium'],1042,3000,1945,'Радиоактивный.'],
 [62,'Sm','Самарий','150.36','Лантаноид',3,6,['самариум','samarium'],1072,1794,1879,'Магниты SmCo.'],
 [63,'Eu','Европий','151.96','Лантаноид',3,6,['европиум','europium'],822,1529,1901,'Красное свечение.'],
 [64,'Gd','Гадолиний','157.25','Лантаноид',3,6,['гадолиниум','gadolinium'],1312,3273,1880,'Контраст для МРТ.'],
@@ -310,351 +267,320 @@ h1 b { color: #5fb8ff; }
 [118,'Og','Оганесон','294','Благородный газ',18,7,['оганесон','oganesson'],null,null,2002,'Самый тяжёлый известный.']
 ];
 
-var COMPOUNDS = [
-    {name:'Вода', formula:'H2O', desc:'оксид водорода'},
-    {name:'Углекислый газ', formula:'CO2', desc:'диоксид углерода'},
-    {name:'Поваренная соль', formula:'NaCl', desc:'хлорид натрия'},
-    {name:'Серная кислота', formula:'H2SO4', desc:'сильная кислота'},
-    {name:'Аммиак', formula:'NH3', desc:'нитрид водорода'},
-    {name:'Метан', formula:'CH4', desc:'простейший углеводород'},
-    {name:'Глюкоза', formula:'C6H12O6', desc:'моносахарид'},
-    {name:'Спирт этиловый', formula:'C2H5OH', desc:'этанол'},
-    {name:'Угарный газ', formula:'CO', desc:'монооксид углерода'},
-    {name:'Озон', formula:'O3', desc:'модификация кислорода'},
-    {name:'Перекись водорода', formula:'H2O2', desc:'пероксид водорода'},
-    {name:'Сода пищевая', formula:'NaHCO3', desc:'гидрокарбонат натрия'},
-    {name:'Известь', formula:'CaCO3', desc:'карбонат кальция'}
+var COMPOUNDS=[
+{name:'Вода',formula:'H2O',desc:'оксид водорода'},
+{name:'Углекислый газ',formula:'CO2',desc:'диоксид углерода'},
+{name:'Поваренная соль',formula:'NaCl',desc:'хлорид натрия'},
+{name:'Серная кислота',formula:'H2SO4',desc:'сильная кислота'},
+{name:'Аммиак',formula:'NH3',desc:'нитрид водорода'},
+{name:'Метан',formula:'CH4',desc:'простейший углеводород'},
+{name:'Глюкоза',formula:'C6H12O6',desc:'моносахарид'},
+{name:'Спирт этиловый',formula:'C2H5OH',desc:'этанол'},
+{name:'Угарный газ',formula:'CO',desc:'монооксид углерода'},
+{name:'Озон',formula:'O3',desc:'модификация кислорода'},
+{name:'Перекись водорода',formula:'H2O2',desc:'пероксид водорода'},
+{name:'Сода пищевая',formula:'NaHCO3',desc:'гидрокарбонат натрия'},
+{name:'Известь',formula:'CaCO3',desc:'карбонат кальция'}
 ];
 
-var FUN = {
-    num: 999, sym: 'Kb', name: 'Коч-Братаниум',
-    mass: '???', cat: 'Меметический элемент', group: '—', period: '—',
-    aliases: ['коч','братаниум','коч-братаниум','кочбратаниум','koch','bratanium','kochbratanium'],
-    melt: null, boil: null, year: 'наши дни',
-    desc: 'Легендарный элемент, открыт в курилке.'
+var FUN={
+num:999,sym:'Kb',name:'Коч-Братаниум',mass:'???',cat:'Меметический элемент',group:'—',period:'—',
+aliases:['коч','братаниум','коч-братаниум','кочбратаниум','koch','bratanium','kochbratanium'],
+melt:null,boil:null,year:'наши дни',desc:'Легендарный элемент, открыт в курилке.'
 };
 
-// ============ ПОДМЕНА ВСТРОЕННЫХ ДАННЫХ СОХРАНЁННЫМИ ============
 (function loadSavedData(){
-    try {
-        var sE = localStorage.getItem('__chem_elements__');
-        var sC = localStorage.getItem('__chem_compounds__');
-        var sF = localStorage.getItem('__chem_fun__');
-        if (sE) { var p = JSON.parse(sE); if (Array.isArray(p) && p.length > 100) ELEMENTS = p; }
-        if (sC) { var pc = JSON.parse(sC); if (Array.isArray(pc) && pc.length > 0) COMPOUNDS = pc; }
-        if (sF) { var pf = JSON.parse(sF); if (pf && pf.sym) FUN = pf; }
-    } catch(e) { console.warn('Saved data:', e); }
+    try{
+        var sE=localStorage.getItem(LS_E);
+        var sC=localStorage.getItem(LS_C);
+        var sF=localStorage.getItem(LS_F);
+        if(sE){var p=JSON.parse(sE);if(Array.isArray(p)&&p.length>100)ELEMENTS=p;}
+        if(sC){var pc=JSON.parse(sC);if(Array.isArray(pc)&&pc.length>0)COMPOUNDS=pc;}
+        if(sF){var pf=JSON.parse(sF);if(pf&&pf.sym)FUN=pf;}
+    }catch(e){console.warn('Load saved:',e);}
 })();
 
-var DB = [];
+var DB=[];
 ELEMENTS.forEach(function(e){
-    DB.push({
-        type:'el', num:e[0], sym:e[1], name:e[2], mass:e[3],
-        cat:e[4], group:e[5], period:e[6], aliases:e[7],
-        melt:e[8], boil:e[9], year:e[10], desc:e[11],
-        formula:e[1], display:e[1]
-    });
+    DB.push({type:'el',num:e[0],sym:e[1],name:e[2],mass:e[3],cat:e[4],group:e[5],period:e[6],aliases:e[7],melt:e[8],boil:e[9],year:e[10],desc:e[11],formula:e[1],display:e[1]});
 });
 COMPOUNDS.forEach(function(c){
-    DB.push({type:'comp', name:c.name, formula:c.formula, display:c.formula, desc:c.desc, aliases:[]});
+    DB.push({type:'comp',name:c.name,formula:c.formula,display:c.formula,desc:c.desc,aliases:[]});
 });
-DB.push({
-    type:'fun', num:FUN.num, sym:FUN.sym, name:FUN.name, mass:FUN.mass,
-    cat:FUN.cat, group:FUN.group, period:FUN.period, aliases:FUN.aliases,
-    melt:FUN.melt, boil:FUN.boil, year:FUN.year, desc:FUN.desc,
-    formula:FUN.sym, display:FUN.sym
-});
-    var input = document.getElementById('search');
-    var results = document.getElementById('results');
-    var counter = document.getElementById('counter');
-    var statusLine = document.getElementById('statusLine');
-    var versionLine = document.getElementById('versionLine');
-    var modal = document.getElementById('modal');
-    var modalContent = document.getElementById('modalContent');
-    var closeBtn = document.getElementById('closeBtn');
-    var updModal = document.getElementById('updModal');
-    var updOpenBtn = document.getElementById('updOpenBtn');
-    var updCloseBtn = document.getElementById('updCloseBtn');
-    var updStatus = document.getElementById('updStatus');
-    var updUrl = document.getElementById('updUrl');
-    var updFetchBtn = document.getElementById('updFetchBtn');
-    var updResetBtn = document.getElementById('updResetBtn');
+DB.push({type:'fun',num:FUN.num,sym:FUN.sym,name:FUN.name,mass:FUN.mass,cat:FUN.cat,group:FUN.group,period:FUN.period,aliases:FUN.aliases,melt:FUN.melt,boil:FUN.boil,year:FUN.year,desc:FUN.desc,formula:FUN.sym,display:FUN.sym});
 
-    function esc(s){
-        if (s === null || s === undefined) return '—';
-        return String(s).replace(/[&<>"']/g, function(c){
-            return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+var input=document.getElementById('search');
+var results=document.getElementById('results');
+var counter=document.getElementById('counter');
+var statusLine=document.getElementById('statusLine');
+var versionLine=document.getElementById('versionLine');
+var modal=document.getElementById('modal');
+var modalContent=document.getElementById('modalContent');
+var closeBtn=document.getElementById('closeBtn');
+var updModal=document.getElementById('updModal');
+var updOpenBtn=document.getElementById('updOpenBtn');
+var updCloseBtn=document.getElementById('updCloseBtn');
+var updStatus=document.getElementById('updStatus');
+var updUrl=document.getElementById('updUrl');
+var updFetchBtn=document.getElementById('updFetchBtn');
+var updResetBtn=document.getElementById('updResetBtn');
+
+function esc(s){
+    if(s===null||s===undefined)return '—';
+    return String(s).replace(/[&<>"']/g,function(c){
+        return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+}
+
+function getSavedDate(){try{return localStorage.getItem(LS_D);}catch(e){return null;}}
+function hasSavedData(){try{return !!localStorage.getItem(LS_E);}catch(e){return false;}}
+
+function updateStatus(){
+    var saved=hasSavedData();
+    var date=getSavedDate();
+    if(saved){
+        var d=date?new Date(date):null;
+        var dStr=d?d.toLocaleDateString('ru-RU')+' '+d.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'}):'';
+        statusLine.textContent='📦 офлайн · данные '+dStr;
+        versionLine.textContent='v2.2-offline · данные с GitHub';
+    }else{
+        statusLine.textContent='📦 офлайн · встроенные данные';
+        versionLine.textContent='v2.2-offline · встроенные данные';
+    }
+    counter.textContent='✓ Загружено: '+DB.length+' записей';
+}
+
+function search(q){
+    var s=q.trim().toLowerCase();
+    if(!s)return [];
+    var out=[];
+    for(var i=0;i<DB.length;i++){
+        var item=DB[i],best=0,matchedBy='';
+        if(item.name){
+            var ln=item.name.toLowerCase();
+            if(ln===s){best=Math.max(best,1000);matchedBy='name';}
+            else if(ln.indexOf(s)===0){best=Math.max(best,500);matchedBy='name';}
+            else if(ln.indexOf(s)!==-1){best=Math.max(best,100);matchedBy='name';}
+        }
+        if(item.sym){
+            var ls=item.sym.toLowerCase();
+            if(ls===s){best=Math.max(best,1050);matchedBy='sym';}
+            else if(ls.indexOf(s)===0){best=Math.max(best,550);matchedBy='sym';}
+        }
+        if(item.formula){
+            var lf=item.formula.toLowerCase();
+            if(lf===s){best=Math.max(best,1050);matchedBy='formula';}
+            else if(lf.indexOf(s)===0){best=Math.max(best,550);matchedBy='formula';}
+        }
+        if(item.aliases){
+            for(var k=0;k<item.aliases.length;k++){
+                var la=item.aliases[k].toLowerCase();
+                if(la===s){best=Math.max(best,950);if(!matchedBy)matchedBy='alias';}
+                else if(la.indexOf(s)===0){best=Math.max(best,480);if(!matchedBy)matchedBy='alias';}
+                else if(la.indexOf(s)!==-1){best=Math.max(best,90);if(!matchedBy)matchedBy='alias';}
+            }
+        }
+        if(best>0)out.push({item:item,score:best,matchedBy:matchedBy});
+    }
+    out.sort(function(a,b){
+        if(b.score!==a.score)return b.score-a.score;
+        return (a.item.name||'').localeCompare(b.item.name||'');
+    });
+    return out;
+}
+
+function render(q){
+    if(!q.trim()){
+        results.innerHTML='<div class="empty">Введите запрос — здесь появятся совпадения<br><br>Нажмите на элемент, чтобы увидеть всю информацию</div>';
+        return;
+    }
+    var matches=search(q);
+    if(!matches.length){
+        results.innerHTML='<div class="empty">🔍 Ничего не найдено<br>Попробуйте другое название, символ или произношение</div>';
+        return;
+    }
+    var html='';
+    for(var i=0;i<matches.length;i++){
+        var m=matches[i],it=m.item;
+        var cls='row'+(i===0?' best':'')+(it.type==='fun'?' fun':'');
+        var aliasIcon=m.matchedBy==='alias'?' 🔊':'';
+        var meta='';
+        if(it.type==='el')meta='№'+it.num+' · '+it.cat;
+        else if(it.type==='comp')meta=it.desc||'соединение';
+        else meta=it.cat;
+        html+='<div class="'+cls+'" data-idx="'+i+'">'
+            +'<div class="sym">'+esc(it.display)+'</div>'
+            +'<div class="info"><div class="name">'+esc(it.name)+aliasIcon+'</div>'
+            +'<div class="meta">'+esc(meta)+'</div></div>'
+            +'<div class="formula">'+esc(it.formula)+'</div>'
+            +'</div>';
+    }
+    results.innerHTML=html;
+    window.__matches=matches;
+    var rows=results.querySelectorAll('.row');
+    for(var j=0;j<rows.length;j++){
+        rows[j].addEventListener('click',function(){
+            var idx=parseInt(this.getAttribute('data-idx'),10);
+            if(window.__matches&&window.__matches[idx])openModal(window.__matches[idx].item);
         });
     }
-
-    function getSavedHtml() {
-        try { return localStorage.getItem(LS_HTML_KEY); } catch(e) { return null; }
-    }
-    function getSavedDate() {
-        try { return localStorage.getItem(LS_DATE_KEY); } catch(e) { return null; }
-    }
-    function isSaved() { return !!getSavedHtml(); }
-
-    function updateStatus() {
-        var saved = isSaved();
-        var date = getSavedDate();
-        if (saved) {
-            var d = date ? new Date(date) : null;
-            var dStr = d ? d.toLocaleDateString('ru-RU') + ' ' + d.toLocaleTimeString('ru-RU', {hour:'2-digit',minute:'2-digit'}) : '';
-            statusLine.textContent = '📦 офлайн · обновлено ' + dStr;
-            versionLine.textContent = 'v2.1-offline · обновлённая версия';
-        } else {
-            statusLine.textContent = '📦 офлайн · встроенная';
-            versionLine.textContent = 'v2.1-offline · встроенная версия';
-        }
-        counter.textContent = '✓ Загружено: ' + DB.length + ' записей';
-    }
-
-    function search(q){
-        var s = q.trim().toLowerCase();
-        if (!s) return [];
-        var out = [];
-        for (var i = 0; i < DB.length; i++){
-            var item = DB[i], best = 0, matchedBy = '';
-            if (item.name){
-                var ln = item.name.toLowerCase();
-                if (ln === s) { best = Math.max(best, 1000); matchedBy = 'name'; }
-                else if (ln.indexOf(s) === 0) { best = Math.max(best, 500); matchedBy = 'name'; }
-                else if (ln.indexOf(s) !== -1) { best = Math.max(best, 100); matchedBy = 'name'; }
-            }
-            if (item.sym){
-                var ls = item.sym.toLowerCase();
-                if (ls === s) { best = Math.max(best, 1050); matchedBy = 'sym'; }
-                else if (ls.indexOf(s) === 0) { best = Math.max(best, 550); matchedBy = 'sym'; }
-            }
-            if (item.formula){
-                var lf = item.formula.toLowerCase();
-                if (lf === s) { best = Math.max(best, 1050); matchedBy = 'formula'; }
-                else if (lf.indexOf(s) === 0) { best = Math.max(best, 550); matchedBy = 'formula'; }
-            }
-            if (item.aliases){
-                for (var k = 0; k < item.aliases.length; k++){
-                    var la = item.aliases[k].toLowerCase();
-                    if (la === s) { best = Math.max(best, 950); if (!matchedBy) matchedBy = 'alias'; }
-                    else if (la.indexOf(s) === 0) { best = Math.max(best, 480); if (!matchedBy) matchedBy = 'alias'; }
-                    else if (la.indexOf(s) !== -1) { best = Math.max(best, 90); if (!matchedBy) matchedBy = 'alias'; }
-                }
-            }
-            if (best > 0) out.push({ item: item, score: best, matchedBy: matchedBy });
-        }
-        out.sort(function(a, b){
-            if (b.score !== a.score) return b.score - a.score;
-            return (a.item.name || '').localeCompare(b.item.name || '');
-        });
-        return out;
-    }
-
-    function render(q){
-        if (!q.trim()){
-            results.innerHTML = '<div class="empty">Введите запрос — здесь появятся совпадения<br><br>Нажмите на элемент, чтобы увидеть всю информацию</div>';
-            return;
-        }
-        var matches = search(q);
-        if (!matches.length){
-            results.innerHTML = '<div class="empty">🔍 Ничего не найдено<br>Попробуйте другое название, символ или произношение</div>';
-            return;
-        }
-        var html = '';
-        for (var i = 0; i < matches.length; i++){
-            var m = matches[i], it = m.item;
-            var cls = 'row' + (i === 0 ? ' best' : '') + (it.type === 'fun' ? ' fun' : '');
-            var aliasIcon = m.matchedBy === 'alias' ? ' 🔊' : '';
-            var meta = '';
-            if (it.type === 'el') meta = '№' + it.num + ' · ' + it.cat;
-            else if (it.type === 'comp') meta = it.desc || 'соединение';
-            else meta = it.cat;
-            html += '<div class="' + cls + '" data-idx="' + i + '">'
-                + '<div class="sym">' + esc(it.display) + '</div>'
-                + '<div class="info"><div class="name">' + esc(it.name) + aliasIcon + '</div>'
-                + '<div class="meta">' + esc(meta) + '</div></div>'
-                + '<div class="formula">' + esc(it.formula) + '</div>'
-                + '</div>';
-        }
-        results.innerHTML = html;
-        window.__matches = matches;
-        var rows = results.querySelectorAll('.row');
-        for (var j = 0; j < rows.length; j++){
-            rows[j].addEventListener('click', function(){
-                var idx = parseInt(this.getAttribute('data-idx'), 10);
-                if (window.__matches && window.__matches[idx]) openModal(window.__matches[idx].item);
-            });
-        }
-    }
-
-    function openModal(item){
-        var html = '';
-        html += '<div class="m-head"><div class="m-sym">' + esc(item.display) + '</div>'
-            + '<div class="m-name"><h2>' + esc(item.name) + '</h2>'
-            + '<p>' + (item.type === 'el' ? 'Элемент №' + item.num : (item.type === 'comp' ? 'Химическое соединение' : 'Пасхалка')) + '</p>'
-            + '</div></div>';
-        if (item.aliases && item.aliases.length){
-            html += '<div class="m-pron"><div class="m-pron-label">🔊 Произношение / альтернативные названия:</div><div class="m-pron-list">';
-            for (var i = 0; i < item.aliases.length; i++){
-                html += '<span>' + esc(item.aliases[i]) + '</span>';
-            }
-            html += '</div></div>';
-        }
-        html += '<div class="m-table">';
-        if (item.type === 'el' || item.type === 'fun'){
-function getSavedDate() {
-    try { return localStorage.getItem('__chem_updated_at__'); } catch(e) { return null; }
-}
-function hasSavedData() {
-    try { return !!localStorage.getItem('__chem_elements__'); } catch(e) { return false; }
 }
 
-function updateStatus() {
-    var saved = hasSavedData();
-    var date = getSavedDate();
-    if (saved) {
-        var d = date ? new Date(date) : null;
-        var dStr = d ? d.toLocaleDateString('ru-RU') + ' ' + d.toLocaleTimeString('ru-RU', {hour:'2-digit',minute:'2-digit'}) : '';
-        statusLine.textContent = '📦 офлайн · данные ' + dStr;
-        versionLine.textContent = 'v2.1-offline · данные с GitHub';
-    } else {
-        statusLine.textContent = '📦 офлайн · встроенные данные';
-        versionLine.textContent = 'v2.1-offline · встроенные данные';
+function openModal(item){
+    var html='';
+    html+='<div class="m-head"><div class="m-sym">'+esc(item.display)+'</div>'
+        +'<div class="m-name"><h2>'+esc(item.name)+'</h2>'
+        +'<p>'+(item.type==='el'?'Элемент №'+item.num:(item.type==='comp'?'Химическое соединение':'Пасхалка'))+'</p>'
+        +'</div></div>';
+    if(item.aliases&&item.aliases.length){
+        html+='<div class="m-pron"><div class="m-pron-label">🔊 Произношение / альтернативные названия:</div><div class="m-pron-list">';
+        for(var i=0;i<item.aliases.length;i++)html+='<span>'+esc(item.aliases[i])+'</span>';
+        html+='</div></div>';
     }
-    counter.textContent = '✓ Загружено: ' + DB.length + ' записей';
+    html+='<div class="m-table">';
+    if(item.type==='el'||item.type==='fun'){
+        html+='<div class="m-row"><span class="k">Символ</span><span class="v">'+esc(item.sym)+'</span></div>';
+        html+='<div class="m-row"><span class="k">Атомный номер</span><span class="v">'+esc(item.num)+'</span></div>';
+        html+='<div class="m-row"><span class="k">Атомная масса</span><span class="v">'+esc(item.mass)+' а.е.м.</span></div>';
+        html+='<div class="m-row"><span class="k">Категория</span><span class="v">'+esc(item.cat)+'</span></div>';
+        html+='<div class="m-row"><span class="k">Группа</span><span class="v">'+esc(item.group)+'</span></div>';
+        html+='<div class="m-row"><span class="k">Период</span><span class="v">'+esc(item.period)+'</span></div>';
+        html+='<div class="m-row"><span class="k">T плавления</span><span class="v">'+(item.melt!==null&&item.melt!==undefined?esc(item.melt)+' °C':'—')+'</span></div>';
+        html+='<div class="m-row"><span class="k">T кипения</span><span class="v">'+(item.boil!==null&&item.boil!==undefined?esc(item.boil)+' °C':'—')+'</span></div>';
+        html+='<div class="m-row"><span class="k">Год открытия</span><span class="v">'+esc(item.year)+'</span></div>';
+    }else if(item.type==='comp'){
+        html+='<div class="m-row"><span class="k">Формула</span><span class="v">'+esc(item.formula)+'</span></div>';
+        html+='<div class="m-row"><span class="k">Тип</span><span class="v">'+esc(item.desc||'соединение')+'</span></div>';
+    }
+    html+='</div>';
+    if(item.desc)html+='<div class="m-desc">'+esc(item.desc)+'</div>';
+    modalContent.innerHTML=html;
+    modal.classList.add('show');
+    modal.scrollTop=0;
 }
+function closeModal(){modal.classList.remove('show');}
+closeBtn.addEventListener('click',closeModal);
+modal.addEventListener('click',function(e){if(e.target===modal)closeModal();});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeModal();updModal.classList.remove('show');}});
 
-function getUpdateUrl(){
-    try { return localStorage.getItem(LS_URL_KEY) || DEFAULT_URL; } catch(e) { return DEFAULT_URL; }
-}
-function setUpdateUrl(u){
-    try { localStorage.setItem(LS_URL_KEY, u); } catch(e) {}
-}
+function getUpdateUrl(){try{return localStorage.getItem(LS_URL_KEY)||DEFAULT_URL;}catch(e){return DEFAULT_URL;}}
+function setUpdateUrl(u){try{localStorage.setItem(LS_URL_KEY,u);}catch(e){}}
 
 function openUpdModal(){
-    updUrl.value = getUpdateUrl();
-    var saved = hasSavedData();
-    var date = getSavedDate();
-    if (saved && date){
-        var d = new Date(date);
-        updStatus.className = 'upd-status info';
-        updStatus.innerHTML = '📦 <b>Используются данные с GitHub</b><br>Обновлено: ' + d.toLocaleString('ru-RU');
-    } else {
-        updStatus.className = 'upd-status info';
-        updStatus.innerHTML = '📦 <b>Встроенные данные</b><br>Обновлений ещё не было.';
+    updUrl.value=getUpdateUrl();
+    var saved=hasSavedData();
+    var date=getSavedDate();
+    if(saved&&date){
+        var d=new Date(date);
+        updStatus.className='upd-status info';
+        updStatus.innerHTML='📦 <b>Используются данные с GitHub</b><br>Обновлено: '+d.toLocaleString('ru-RU');
+    }else{
+        updStatus.className='upd-status info';
+        updStatus.innerHTML='📦 <b>Встроенные данные</b><br>Обновлений ещё не было.';
     }
-    updFetchBtn.disabled = false;
-    updFetchBtn.textContent = 'Загрузить и применить';
+    updFetchBtn.disabled=false;
+    updFetchBtn.textContent='Загрузить и применить';
     updModal.classList.add('show');
 }
-function closeUpdModal(){ updModal.classList.remove('show'); }
-updOpenBtn.addEventListener('click', openUpdModal);
-updCloseBtn.addEventListener('click', closeUpdModal);
-updModal.addEventListener('click', function(e){ if (e.target === updModal) closeUpdModal(); });
-updUrl.addEventListener('change', function(){ setUpdateUrl(updUrl.value.trim()); });
+function closeUpdModal(){updModal.classList.remove('show');}
+updOpenBtn.addEventListener('click',openUpdModal);
+updCloseBtn.addEventListener('click',closeUpdModal);
+updModal.addEventListener('click',function(e){if(e.target===updModal)closeUpdModal();});
+updUrl.addEventListener('change',function(){setUpdateUrl(updUrl.value.trim());});
 
-// Извлекаем массив/объект из HTML через regex + Function
-function extractArray(html, varName) {
-    var re = new RegExp('var\\s+' + varName + '\\s*=\\s*(\\[[\\s\\S]*?\\]);', 'm');
-    var m = html.match(re);
-    if (!m) return null;
-    try { return new Function('return ' + m[1])(); } catch(e) { return null; }
+function extractArray(html,varName){
+    var re=new RegExp('var\\s+'+varName+'\\s*=\\s*(\\[[\\s\\S]*?\\]);','m');
+    var m=html.match(re);
+    if(!m)return null;
+    try{return new Function('return '+m[1])();}catch(e){return null;}
 }
-function extractObject(html, varName) {
-    var re = new RegExp('var\\s+' + varName + '\\s*=\\s*(\\{[\\s\\S]*?\\});', 'm');
-    var m = html.match(re);
-    if (!m) return null;
-    try { return new Function('return ' + m[1])(); } catch(e) { return null; }
+function extractObject(html,varName){
+    var re=new RegExp('var\\s+'+varName+'\\s*=\\s*(\\{[\\s\\S]*?\\});','m');
+    var m=html.match(re);
+    if(!m)return null;
+    try{return new Function('return '+m[1])();}catch(e){return null;}
 }
 
-updFetchBtn.addEventListener('click', function(){
-    var url = updUrl.value.trim();
-    if (!url){ updStatus.className = 'upd-status err'; updStatus.textContent = 'Укажите URL'; return; }
+updFetchBtn.addEventListener('click',function(){
+    var url=updUrl.value.trim();
+    if(!url){updStatus.className='upd-status err';updStatus.textContent='Укажите URL';return;}
     setUpdateUrl(url);
-    updFetchBtn.disabled = true;
-    updFetchBtn.innerHTML = '<span class="spinner"></span> Загрузка...';
-
-    var attempts = [
-        { name: 'прямое', url: url },
-        { name: 'corsproxy.io', url: 'https://corsproxy.io/?url=' + encodeURIComponent(url) },
-        { name: 'allorigins', url: 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url) },
-        { name: 'codetabs', url: 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(url) }
+    updFetchBtn.disabled=true;
+    updFetchBtn.innerHTML='<span class="spinner"></span> Загрузка...';
+    var attempts=[
+        {name:'прямое',url:url},
+        {name:'corsproxy.io',url:'https://corsproxy.io/?url='+encodeURIComponent(url)},
+        {name:'allorigins',url:'https://api.allorigins.win/raw?url='+encodeURIComponent(url)},
+        {name:'codetabs',url:'https://api.codetabs.com/v1/proxy?quest='+encodeURIComponent(url)}
     ];
-    var idx = 0;
-
-    function resetBtn() {
-        updFetchBtn.disabled = false;
-        updFetchBtn.textContent = 'Загрузить и применить';
-    }
-
-    function tryNext() {
-        if (idx >= attempts.length) {
-            updStatus.className = 'upd-status err';
-            updStatus.innerHTML = '❌ <b>Все способы не сработали.</b><br>Проверьте интернет и URL.';
+    var idx=0;
+    function resetBtn(){updFetchBtn.disabled=false;updFetchBtn.textContent='Загрузить и применить';}
+    function tryNext(){
+        if(idx>=attempts.length){
+            updStatus.className='upd-status err';
+            updStatus.innerHTML='❌ <b>Все способы не сработали.</b><br>Проверьте интернет и URL.';
             resetBtn();
             return;
         }
-        var a = attempts[idx];
-        updStatus.className = 'upd-status info';
-        updStatus.textContent = 'Попытка ' + (idx+1) + '/' + attempts.length + ': ' + a.name + '...';
-        fetch(a.url, { cache: 'no-store', mode: 'cors' })
+        var a=attempts[idx];
+        updStatus.className='upd-status info';
+        updStatus.textContent='Попытка '+(idx+1)+'/'+attempts.length+': '+a.name+'...';
+        fetch(a.url,{cache:'no-store',mode:'cors'})
             .then(function(r){
-                if (!r.ok) throw new Error('HTTP ' + r.status);
+                if(!r.ok)throw new Error('HTTP '+r.status);
                 return r.text();
             })
             .then(function(html){
-                if (!html || html.length < 1000) throw new Error('Слишком маленький ответ');
-                var newE = extractArray(html, 'ELEMENTS');
-                var newC = extractArray(html, 'COMPOUNDS');
-                var newF = extractObject(html, 'FUN');
-                if (!newE || newE.length < 100) throw new Error('ELEMENTS не найдены в HTML');
-                try {
-                    localStorage.setItem('__chem_elements__', JSON.stringify(newE));
-                    if (newC) localStorage.setItem('__chem_compounds__', JSON.stringify(newC));
-                    if (newF) localStorage.setItem('__chem_fun__', JSON.stringify(newF));
-                    localStorage.setItem('__chem_updated_at__', new Date().toISOString());
-                } catch(e) {
-                    throw new Error('Не удалось сохранить: ' + e.message);
+                if(!html||html.length<1000)throw new Error('Слишком маленький ответ');
+                var newE=extractArray(html,'ELEMENTS');
+                var newC=extractArray(html,'COMPOUNDS');
+                var newF=extractObject(html,'FUN');
+                if(!newE||newE.length<100)throw new Error('ELEMENTS не найдены в HTML');
+                try{
+                    localStorage.setItem(LS_E,JSON.stringify(newE));
+                    if(newC)localStorage.setItem(LS_C,JSON.stringify(newC));
+                    if(newF)localStorage.setItem(LS_F,JSON.stringify(newF));
+                    localStorage.setItem(LS_D,new Date().toISOString());
+                }catch(e){
+                    throw new Error('Не удалось сохранить: '+e.message);
                 }
-                updStatus.className = 'upd-status ok';
-                updStatus.innerHTML = '✅ <b>Успешно!</b><br>'
-                    + 'Способ: ' + a.name + '<br>'
-                    + 'Элементов: ' + newE.length + '<br>'
-                    + 'Перезагрузка...';
-                setTimeout(function(){ location.reload(); }, 900);
+                updStatus.className='upd-status ok';
+                updStatus.innerHTML='✅ <b>Успешно!</b><br>Способ: '+a.name+'<br>Элементов: '+newE.length+'<br>Перезагрузка...';
+                setTimeout(function(){location.reload();},900);
             })
             .catch(function(err){
-                console.warn('[' + a.name + ']', err.message);
+                console.warn('['+a.name+']',err.message);
                 idx++;
-                setTimeout(tryNext, 250);
+                setTimeout(tryNext,250);
             });
     }
     tryNext();
 });
 
-updResetBtn.addEventListener('click', function(){
-    if (!hasSavedData()){ updStatus.className = 'upd-status info'; updStatus.textContent = 'Уже встроенные данные.'; return; }
-    if (!confirm('Удалить данные с GitHub и вернуться к встроенным?')) return;
-    try {
-        localStorage.removeItem('__chem_elements__');
-        localStorage.removeItem('__chem_compounds__');
-        localStorage.removeItem('__chem_fun__');
-        localStorage.removeItem('__chem_updated_at__');
-    } catch(e) {}
+updResetBtn.addEventListener('click',function(){
+    if(!hasSavedData()){updStatus.className='upd-status info';updStatus.textContent='Уже встроенные данные.';return;}
+    if(!confirm('Удалить данные с GitHub и вернуться к встроенным?'))return;
+    try{
+        localStorage.removeItem(LS_E);
+        localStorage.removeItem(LS_C);
+        localStorage.removeItem(LS_F);
+        localStorage.removeItem(LS_D);
+    }catch(e){}
     location.reload();
 });
 
-input.addEventListener('input', function(){ render(input.value); });
-    var hintEls = document.querySelectorAll('#hints code');
-    for (var i = 0; i < hintEls.length; i++){
-        hintEls[i].addEventListener('click', function(){
-            var q = this.getAttribute('data-q');
-            input.value = q;
-            render(q);
-        });
-    }
-    render('');
-    updateStatus();
-    console.log('✅ ChemSearch v2.1-offline loaded. Records:', DB.length, '| Saved:', isSaved());
+input.addEventListener('input',function(){render(input.value);});
+var hintEls=document.querySelectorAll('#hints code');
+for(var i=0;i<hintEls.length;i++){
+    hintEls[i].addEventListener('click',function(){
+        var q=this.getAttribute('data-q');
+        input.value=q;
+        render(q);
+    });
+}
+render('');
+updateStatus();
+console.log('✅ ChemSearch v2.2-offline. Records:',DB.length,'| Saved:',hasSavedData());
 })();
 </script>
 </body>

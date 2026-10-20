@@ -11,17 +11,18 @@ html,body{height:100%;overflow:hidden}
 body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background:#0b1a2e;display:flex;padding:8px;padding-top:max(8px,env(safe-area-inset-top));padding-bottom:max(8px,env(safe-area-inset-bottom));height:100vh;height:100dvh}
 .app{flex:1;min-height:0;display:flex;flex-direction:column;background:#16263a;border-radius:20px;padding:14px;border:1px solid #2b4a70;overflow:hidden}
 .top{flex-shrink:0}
-.header-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
-h1{font-size:1rem;color:#eef5ff;font-weight:500}
+.header-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:6px}
+h1{font-size:1rem;color:#eef5ff;font-weight:500;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 h1 b{color:#5fb8ff}
-.upd-btn{background:#0d1f30;border:1px solid #2b4a70;color:#b6d6ff;padding:5px 10px;border-radius:20px;font-size:.72rem;cursor:pointer;display:flex;gap:4px;align-items:center}
+.header-btns{display:flex;gap:5px;flex-shrink:0}
+.upd-btn{background:#0d1f30;border:1px solid #2b4a70;color:#b6d6ff;padding:5px 10px;border-radius:20px;font-size:.72rem;cursor:pointer;display:flex;gap:4px;align-items:center;white-space:nowrap}
 .upd-btn:active{background:#17344d}
 .search-wrap{position:relative;margin-bottom:6px}
 #search{width:100%;padding:11px 14px 11px 38px;font-size:16px;border-radius:40px;border:1.5px solid #2b4a70;background:#0e1d2f;color:#f0f7ff;outline:none}
 #search:focus{border-color:#3f9eff;box-shadow:0 0 0 3px rgba(63,158,255,.2)}
 .icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);pointer-events:none}
 .counter{font-size:11px;color:#7ea3cc;margin-bottom:6px;min-height:14px;display:flex;justify-content:space-between;gap:8px}
-.counter .status{font-size:10px;color:#5a7ea3}
+.counter .status{font-size:10px;color:#5a7ea3;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #results{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:5px;-webkit-overflow-scrolling:touch}
 .empty{color:#7c9ac0;text-align:center;padding:24px 8px;font-size:.9rem;line-height:1.5}
 .row{display:flex;align-items:center;gap:10px;padding:9px 12px;background:#0d1f30;border-radius:12px;border:1px solid #203a55;cursor:pointer;flex-shrink:0}
@@ -78,14 +79,33 @@ h1 b{color:#5fb8ff}
 .upd-note{font-size:.72rem;color:#6d8eb2;margin-top:12px;line-height:1.5;padding-top:10px;border-top:1px dashed #2b4a70}
 .spinner{display:inline-block;width:12px;height:12px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;vertical-align:middle;margin-right:6px}
 @keyframes spin{to{transform:rotate(360deg)}}
+
+/* ==== НАСТРОЙКИ ==== */
+.set-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px;background:#0d1f30;border-radius:12px;margin-bottom:10px}
+.set-row .set-info{flex:1;min-width:0}
+.set-row .set-name{font-size:.92rem;color:#e0eeff;font-weight:500;margin-bottom:3px}
+.set-row .set-desc{font-size:.72rem;color:#7ea3cc;line-height:1.4}
+.toggle{position:relative;display:inline-block;width:48px;height:26px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0}
+.toggle .slider{position:absolute;cursor:pointer;inset:0;background:#2b4a70;border-radius:26px;transition:.2s}
+.toggle .slider:before{content:"";position:absolute;height:20px;width:20px;left:3px;bottom:3px;background:#e0eeff;border-radius:50%;transition:.2s}
+.toggle input:checked + .slider{background:#4f9cff}
+.toggle input:checked + .slider:before{transform:translateX(22px)}
+.fun-list{margin-top:8px;padding:10px 12px;background:#0a1929;border-radius:10px;border:1px solid #1d3f60}
+.fun-list-title{font-size:.72rem;color:#7ea3cc;margin-bottom:6px}
+.fun-list-items{display:flex;flex-wrap:wrap;gap:5px}
+.fun-list-items span{background:linear-gradient(90deg,rgba(255,75,139,.18),rgba(75,185,255,.18),rgba(184,75,255,.18));border:1px solid #b84bff;color:#e97bff;padding:3px 10px;border-radius:20px;font-size:.72rem;font-weight:600;font-family:monospace}
 </style>
 </head>
 <body>
 <div class="app">
     <div class="top">
         <div class="header-row">
-            <h1><b>🧪</b> Химические элементы</h1>
-            <button class="upd-btn" id="updOpenBtn">🔄 Обновить</button>
+            <h1><b>🧪</b> Хим. элементы</h1>
+            <div class="header-btns">
+                <button class="upd-btn" id="setOpenBtn">⚙️</button>
+                <button class="upd-btn" id="updOpenBtn">🔄</button>
+            </div>
         </div>
         <div class="search-wrap">
             <span class="icon">🔎</span>
@@ -109,7 +129,7 @@ h1 b{color:#5fb8ff}
         <code data-q="H2O">H2O</code>
         <code data-q="Au">Au</code>
     </div>
-    <div class="version" id="versionLine">v2.2-offline</div>
+    <div class="version" id="versionLine">v2.3-offline</div>
 </div>
 
 <div class="modal" id="modal">
@@ -130,9 +150,29 @@ h1 b{color:#5fb8ff}
             <button class="btn-primary" id="updFetchBtn">Загрузить и применить</button>
             <button class="btn-secondary" id="updResetBtn">↩ К встроенной</button>
         </div>
-        <div class="upd-note">
-            💡 Скачивается только база с GitHub, интерфейс остаётся прежний. Работает офлайн.
+        <div class="upd-note">💡 Скачивается только база с GitHub, интерфейс остаётся прежний.</div>
+    </div>
+</div>
+
+<div class="modal" id="setModal">
+    <div class="modal-inner upd-inner">
+        <button class="close-btn" id="setCloseBtn">×</button>
+        <div class="upd-title">⚙️ Настройки</div>
+        <div class="set-row">
+            <div class="set-info">
+                <div class="set-name">Мемные элементы</div>
+                <div class="set-desc">Показывать шуточные элементы в поиске</div>
+            </div>
+            <label class="toggle">
+                <input type="checkbox" id="funToggle">
+                <span class="slider"></span>
+            </label>
         </div>
+        <div class="fun-list">
+            <div class="fun-list-title">Мемные элементы в базе:</div>
+            <div class="fun-list-items" id="funListItems"></div>
+        </div>
+        <div class="upd-note">💡 Настройка сохраняется на устройстве и применяется сразу.</div>
     </div>
 </div>
 
@@ -143,8 +183,9 @@ var DEFAULT_URL='https://raw.githubusercontent.com/Cheese1488/Elements/refs/head
 var LS_URL_KEY='__chem_update_url__';
 var LS_E='__chem_elements__';
 var LS_C='__chem_compounds__';
-var LS_F='__chem_fun__';
+var LS_F='__chem_fun_elements__';
 var LS_D='__chem_updated_at__';
+var LS_SHOW_FUN='__chem_show_fun__';
 
 var ELEMENTS=[
 [1,'H','Водород','1.008','Неметалл',1,1,['гидроген','hydrogen'],-259,-253,1766,'Самый лёгкий и распространённый элемент во Вселенной.'],
@@ -283,31 +324,50 @@ var COMPOUNDS=[
 {name:'Известь',formula:'CaCO3',desc:'карбонат кальция'}
 ];
 
-var FUN={
-num:999,sym:'Kb',name:'Коч-Братаниум',mass:'???',cat:'Меметический элемент',group:'—',period:'—',
-aliases:['коч','братаниум','коч-братаниум','кочбратаниум','koch','bratanium','kochbratanium'],
-melt:null,boil:null,year:'наши дни',desc:'Легендарный элемент, открыт в курилке.'
-};
+var FUN_ELEMENTS=[
+{num:999,sym:'Kb',name:'Коч-Братаниум',mass:'???',cat:'Меметический элемент',group:'—',period:'—',aliases:['коч','братаниум','коч-братаниум','кочбратаниум','koch','bratanium','kochbratanium'],melt:null,boil:null,year:'наши дни',desc:'Легендарный элемент, открыт в курилке.'},
+{num:1000,sym:'El',name:'Эль-Патрониум',mass:'???',cat:'Меметический элемент',group:'—',period:'—',aliases:['эль-патрониум','эльпатрониум','elpatron','el-patron','патрон','patron','el'],melt:null,boil:null,year:'наши дни',desc:'Покровитель всех мемов. Обладает харизмой +100.'},
+{num:1001,sym:'Gu',name:'Гуртовенкум',mass:'???',cat:'Меметический элемент',group:'—',period:'—',aliases:['гуртовенкум','гуртовенк','гурт','gurtovenk','gurtovenkum','gurt'],melt:null,boil:null,year:'наши дни',desc:'Высокореактивный мемный металл. Нестабилен при контакте с реальностью.'},
+{num:1002,sym:'Pn',name:'Пантерий',mass:'???',cat:'Меметический элемент',group:'—',period:'—',aliases:['пантерий','пантер','panter','panther','пантера','pantherium'],melt:null,boil:null,year:'наши дни',desc:'Хищный элемент. Активен в ночное время суток.'},
+{num:1003,sym:'Tf',name:'Телифоний',mass:'???',cat:'Меметический элемент',group:'—',period:'—',aliases:['телифоний','телифон','телефон','telifon','telifonium','telefon','tel'],melt:null,boil:null,year:'наши дни',desc:'Элемент связи. Резонирует на частоте мемов.'}
+];
 
-(function loadSavedData(){
+(function loadSaved(){
     try{
-        var sE=localStorage.getItem(LS_E);
-        var sC=localStorage.getItem(LS_C);
-        var sF=localStorage.getItem(LS_F);
+        var sE=localStorage.getItem(LS_E),sC=localStorage.getItem(LS_C),sF=localStorage.getItem(LS_F);
         if(sE){var p=JSON.parse(sE);if(Array.isArray(p)&&p.length>100)ELEMENTS=p;}
         if(sC){var pc=JSON.parse(sC);if(Array.isArray(pc)&&pc.length>0)COMPOUNDS=pc;}
-        if(sF){var pf=JSON.parse(sF);if(pf&&pf.sym)FUN=pf;}
+        if(sF){var pf=JSON.parse(sF);
+            if(Array.isArray(pf)&&pf.length>0)FUN_ELEMENTS=pf;
+            else if(pf&&pf.sym)FUN_ELEMENTS=[pf];
+        }
     }catch(e){console.warn('Load saved:',e);}
 })();
 
+var showFun=true;
+(function loadShowFun(){
+    try{
+        var v=localStorage.getItem(LS_SHOW_FUN);
+        if(v==='0')showFun=false;
+        else if(v==='1')showFun=true;
+    }catch(e){}
+})();
+
 var DB=[];
-ELEMENTS.forEach(function(e){
-    DB.push({type:'el',num:e[0],sym:e[1],name:e[2],mass:e[3],cat:e[4],group:e[5],period:e[6],aliases:e[7],melt:e[8],boil:e[9],year:e[10],desc:e[11],formula:e[1],display:e[1]});
-});
-COMPOUNDS.forEach(function(c){
-    DB.push({type:'comp',name:c.name,formula:c.formula,display:c.formula,desc:c.desc,aliases:[]});
-});
-DB.push({type:'fun',num:FUN.num,sym:FUN.sym,name:FUN.name,mass:FUN.mass,cat:FUN.cat,group:FUN.group,period:FUN.period,aliases:FUN.aliases,melt:FUN.melt,boil:FUN.boil,year:FUN.year,desc:FUN.desc,formula:FUN.sym,display:FUN.sym});
+function rebuildDB(){
+    DB=[];
+    ELEMENTS.forEach(function(e){
+        DB.push({type:'el',num:e[0],sym:e[1],name:e[2],mass:e[3],cat:e[4],group:e[5],period:e[6],aliases:e[7],melt:e[8],boil:e[9],year:e[10],desc:e[11],formula:e[1],display:e[1]});
+    });
+    COMPOUNDS.forEach(function(c){
+        DB.push({type:'comp',name:c.name,formula:c.formula,display:c.formula,desc:c.desc,aliases:[]});
+    });
+    if(showFun){
+        FUN_ELEMENTS.forEach(function(f){
+            DB.push({type:'fun',num:f.num,sym:f.sym,name:f.name,mass:f.mass,cat:f.cat,group:f.group,period:f.period,aliases:f.aliases,melt:f.melt,boil:f.boil,year:f.year,desc:f.desc,formula:f.sym,display:f.sym});
+        });
+    }
+}
 
 var input=document.getElementById('search');
 var results=document.getElementById('results');
@@ -324,6 +384,11 @@ var updStatus=document.getElementById('updStatus');
 var updUrl=document.getElementById('updUrl');
 var updFetchBtn=document.getElementById('updFetchBtn');
 var updResetBtn=document.getElementById('updResetBtn');
+var setModal=document.getElementById('setModal');
+var setOpenBtn=document.getElementById('setOpenBtn');
+var setCloseBtn=document.getElementById('setCloseBtn');
+var funToggle=document.getElementById('funToggle');
+var funListItems=document.getElementById('funListItems');
 
 function esc(s){
     if(s===null||s===undefined)return '—';
@@ -331,7 +396,6 @@ function esc(s){
         return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
     });
 }
-
 function getSavedDate(){try{return localStorage.getItem(LS_D);}catch(e){return null;}}
 function hasSavedData(){try{return !!localStorage.getItem(LS_E);}catch(e){return false;}}
 
@@ -341,13 +405,16 @@ function updateStatus(){
     if(saved){
         var d=date?new Date(date):null;
         var dStr=d?d.toLocaleDateString('ru-RU')+' '+d.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'}):'';
-        statusLine.textContent='📦 офлайн · данные '+dStr;
-        versionLine.textContent='v2.2-offline · данные с GitHub';
+        statusLine.textContent='📦 '+dStr;
+        versionLine.textContent='v2.3-offline · данные с GitHub';
     }else{
-        statusLine.textContent='📦 офлайн · встроенные данные';
-        versionLine.textContent='v2.2-offline · встроенные данные';
+        statusLine.textContent='📦 встроенные';
+        versionLine.textContent='v2.3-offline · встроенные данные';
     }
-    counter.textContent='✓ Загружено: '+DB.length+' записей';
+    var lastEl='';
+    for(var z=DB.length-1;z>=0;z--){if(DB[z].type==='el'){lastEl=DB[z].sym+' №'+DB[z].num;break;}}
+    var funCount=showFun?FUN_ELEMENTS.length:0;
+    counter.textContent='✓ '+DB.length+' записей'+(funCount?' · 🎉'+funCount:'')+' · '+lastEl;
 }
 
 function search(q){
@@ -407,7 +474,7 @@ function render(q){
         var meta='';
         if(it.type==='el')meta='№'+it.num+' · '+it.cat;
         else if(it.type==='comp')meta=it.desc||'соединение';
-        else meta=it.cat;
+        else meta='🎉 '+it.cat;
         html+='<div class="'+cls+'" data-idx="'+i+'">'
             +'<div class="sym">'+esc(it.display)+'</div>'
             +'<div class="info"><div class="name">'+esc(it.name)+aliasIcon+'</div>'
@@ -430,7 +497,7 @@ function openModal(item){
     var html='';
     html+='<div class="m-head"><div class="m-sym">'+esc(item.display)+'</div>'
         +'<div class="m-name"><h2>'+esc(item.name)+'</h2>'
-        +'<p>'+(item.type==='el'?'Элемент №'+item.num:(item.type==='comp'?'Химическое соединение':'Пасхалка'))+'</p>'
+        +'<p>'+(item.type==='el'?'Элемент №'+item.num:(item.type==='comp'?'Химическое соединение':'🎉 Мемный элемент №'+item.num))+'</p>'
         +'</div></div>';
     if(item.aliases&&item.aliases.length){
         html+='<div class="m-pron"><div class="m-pron-label">🔊 Произношение / альтернативные названия:</div><div class="m-pron-list">';
@@ -461,7 +528,7 @@ function openModal(item){
 function closeModal(){modal.classList.remove('show');}
 closeBtn.addEventListener('click',closeModal);
 modal.addEventListener('click',function(e){if(e.target===modal)closeModal();});
-document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeModal();updModal.classList.remove('show');}});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeModal();updModal.classList.remove('show');setModal.classList.remove('show');}});
 
 function getUpdateUrl(){try{return localStorage.getItem(LS_URL_KEY)||DEFAULT_URL;}catch(e){return DEFAULT_URL;}}
 function setUpdateUrl(u){try{localStorage.setItem(LS_URL_KEY,u);}catch(e){}}
@@ -487,6 +554,31 @@ updOpenBtn.addEventListener('click',openUpdModal);
 updCloseBtn.addEventListener('click',closeUpdModal);
 updModal.addEventListener('click',function(e){if(e.target===updModal)closeUpdModal();});
 updUrl.addEventListener('change',function(){setUpdateUrl(updUrl.value.trim());});
+
+/* ==== НАСТРОЙКИ ==== */
+function renderFunList(){
+    var html='';
+    FUN_ELEMENTS.forEach(function(f){
+        html+='<span>'+esc(f.sym)+' · '+esc(f.name)+'</span>';
+    });
+    funListItems.innerHTML=html||'<span>нет</span>';
+}
+function openSetModal(){
+    funToggle.checked=showFun;
+    renderFunList();
+    setModal.classList.add('show');
+}
+function closeSetModal(){setModal.classList.remove('show');}
+setOpenBtn.addEventListener('click',openSetModal);
+setCloseBtn.addEventListener('click',closeSetModal);
+setModal.addEventListener('click',function(e){if(e.target===setModal)closeSetModal();});
+funToggle.addEventListener('change',function(){
+    showFun=funToggle.checked;
+    try{localStorage.setItem(LS_SHOW_FUN,showFun?'1':'0');}catch(e){}
+    rebuildDB();
+    updateStatus();
+    render(input.value);
+});
 
 function extractArray(html,varName){
     var re=new RegExp('var\\s+'+varName+'\\s*=\\s*(\\[[\\s\\S]*?\\]);','m');
@@ -519,33 +611,32 @@ updFetchBtn.addEventListener('click',function(){
         if(idx>=attempts.length){
             updStatus.className='upd-status err';
             updStatus.innerHTML='❌ <b>Все способы не сработали.</b><br>Проверьте интернет и URL.';
-            resetBtn();
-            return;
+            resetBtn();return;
         }
         var a=attempts[idx];
         updStatus.className='upd-status info';
         updStatus.textContent='Попытка '+(idx+1)+'/'+attempts.length+': '+a.name+'...';
         fetch(a.url,{cache:'no-store',mode:'cors'})
-            .then(function(r){
-                if(!r.ok)throw new Error('HTTP '+r.status);
-                return r.text();
-            })
+            .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.text();})
             .then(function(html){
                 if(!html||html.length<1000)throw new Error('Слишком маленький ответ');
                 var newE=extractArray(html,'ELEMENTS');
                 var newC=extractArray(html,'COMPOUNDS');
-                var newF=extractObject(html,'FUN');
-                if(!newE||newE.length<100)throw new Error('ELEMENTS не найдены в HTML');
+                var newF=extractArray(html,'FUN_ELEMENTS');
+                if(!newF){
+                    var oldF=extractObject(html,'FUN');
+                    if(oldF&&oldF.sym)newF=[oldF];
+                }
+                if(!newE||newE.length<100)throw new Error('ELEMENTS не найдены');
+                if(newE.length<ELEMENTS.length)throw new Error('На GitHub только '+newE.length+' элементов (сейчас в приложении '+ELEMENTS.length+'). Обновите index.html на GitHub.');
                 try{
                     localStorage.setItem(LS_E,JSON.stringify(newE));
                     if(newC)localStorage.setItem(LS_C,JSON.stringify(newC));
-                    if(newF)localStorage.setItem(LS_F,JSON.stringify(newF));
+                    if(newF&&newF.length)localStorage.setItem(LS_F,JSON.stringify(newF));
                     localStorage.setItem(LS_D,new Date().toISOString());
-                }catch(e){
-                    throw new Error('Не удалось сохранить: '+e.message);
-                }
+                }catch(e){throw new Error('Не удалось сохранить: '+e.message);}
                 updStatus.className='upd-status ok';
-                updStatus.innerHTML='✅ <b>Успешно!</b><br>Способ: '+a.name+'<br>Элементов: '+newE.length+'<br>Перезагрузка...';
+                updStatus.innerHTML='✅ <b>Успешно!</b><br>Способ: '+a.name+'<br>Элементов: '+newE.length+'<br>Мемных: '+(newF?newF.length:0)+'<br>Перезагрузка...';
                 setTimeout(function(){location.reload();},900);
             })
             .catch(function(err){
@@ -578,9 +669,11 @@ for(var i=0;i<hintEls.length;i++){
         render(q);
     });
 }
+
+rebuildDB();
 render('');
 updateStatus();
-console.log('✅ ChemSearch v2.2-offline. Records:',DB.length,'| Saved:',hasSavedData());
+console.log('✅ ChemSearch v2.3. Records:',DB.length,'| Fun:',showFun,FUN_ELEMENTS.length,'| Saved:',hasSavedData());
 })();
 </script>
 </body>

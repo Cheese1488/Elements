@@ -4,18 +4,20 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#0b1a2e">
-<title>Химия — v2.7</title>
+<title>Химия — v2.8</title>
 <script>
-/* Bootstrap: применить сохранённый полный HTML */
+/* Bootstrap: накрываем старое приложение новым через iframe */
 (function(){
     try {
-        if (window.name === '__chem_apply__') {
-            window.name = '';
+        if (window.self === window.top) {
             var saved = localStorage.getItem('__chem_full_html__');
             if (saved && saved.length > 1000) {
-                document.open();
-                document.write(saved);
-                document.close();
+                window.__skip_init = true; // Отключаем запуск старого кода
+                document.addEventListener('DOMContentLoaded', function() {
+                    document.body.innerHTML = '<iframe id="chem-app-frame" style="position:fixed;top:0;left:0;width:100vw;height:100vh;border:none;z-index:999999;background:#0b1a2e;"></iframe>';
+                    var f = document.getElementById('chem-app-frame');
+                    f.srcdoc = saved;
+                });
             }
         }
     } catch(e) { console.warn('Apply:', e); }
@@ -180,7 +182,7 @@ h1 b{color:#5fb8ff}
         <code data-q="Гексан">Гексан</code>
         <code data-q="Метан">Метан</code>
     </div>
-    <div class="version" id="versionLine">v2.7</div>
+    <div class="version" id="versionLine">v2.8</div>
 </div>
 
 <div class="modal" id="modal">
@@ -305,7 +307,9 @@ h1 b{color:#5fb8ff}
 <script>
 (function(){
 'use strict';
-var BUILD='v2.7';
+if (window.__skip_init) return; // Если загружен iframe, старый код не запускаем
+
+var BUILD='v2.8';
 var DEFAULT_URL='https://raw.githubusercontent.com/Cheese1488/Elements/refs/heads/main/index.html';
 var LS_URL_KEY='__chem_update_url__';
 var LS_E='__chem_elements__';
@@ -741,7 +745,7 @@ updShowGitBtn.addEventListener('click',function(){
     try{window.open(u,'_blank');}catch(e){alert(u);}
 });
 
-/* ============ ПОЛНОЕ ОБНОВЛЕНИЕ (весь HTML) ============ */
+/* ============ ПОЛНОЕ ОБНОВЛЕНИЕ ============ */
 updFullBtn.addEventListener('click',function(){
     var url=updUrl.value.trim();
     if(!url){updStatus.className='upd-status err';updStatus.textContent='Укажите URL';return;}
@@ -792,8 +796,7 @@ updFullBtn.addEventListener('click',function(){
                     +'Алканы: '+(hasAlkanes?'✅':'❌')+'<br>'
                     +'Перезагрузка...';
                 setTimeout(function(){
-                    window.name='__chem_apply__';
-                    location.reload();
+                    location.reload(); // Полная перезагрузка страницы
                 },700);
             })
             .catch(function(err){

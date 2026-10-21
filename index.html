@@ -4,7 +4,23 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#0b1a2e">
-<title>Химия — v2.6</title>
+<title>Химия — v2.7</title>
+<script>
+/* Bootstrap: применить сохранённый полный HTML */
+(function(){
+    try {
+        if (window.name === '__chem_apply__') {
+            window.name = '';
+            var saved = localStorage.getItem('__chem_full_html__');
+            if (saved && saved.length > 1000) {
+                document.open();
+                document.write(saved);
+                document.close();
+            }
+        }
+    } catch(e) { console.warn('Apply:', e); }
+})();
+</script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;overflow:hidden}
@@ -78,6 +94,9 @@ h1 b{color:#5fb8ff}
 .btn-primary{background:linear-gradient(135deg,#3a7bd5,#4fa3ff);color:#fff}
 .btn-primary:active{background:linear-gradient(135deg,#2f6eb0,#3f8fe0)}
 .btn-primary:disabled{background:#2a4560;color:#7e9ab8;cursor:not-allowed}
+.btn-danger{background:linear-gradient(135deg,#d95a5a,#e87070);color:#fff}
+.btn-danger:active{background:linear-gradient(135deg,#b83d3d,#d05050)}
+.btn-danger:disabled{background:#6a3030;color:#c09090;cursor:not-allowed}
 .btn-secondary{background:#0d1f30;color:#b6d6ff;border:1px solid #2b4a70!important}
 .btn-secondary:active{background:#17344d}
 .upd-note{font-size:.72rem;color:#6d8eb2;margin-top:12px;line-height:1.5;padding-top:10px;border-top:1px dashed #2b4a70}
@@ -113,8 +132,6 @@ h1 b{color:#5fb8ff}
 .calc-hints code{background:#0a1a2a;border:1px solid #24476b;color:#b6d6ff;padding:3px 9px;border-radius:20px;font-size:.72rem;font-family:monospace;cursor:pointer;user-select:none}
 .calc-hints code:active{background:#1e3a5a}
 .hidden{display:none!important}
-
-/* ======== ТАБЛИЦА МЕНДЕЛЕЕВА ======== */
 .periodic-wrap{overflow-x:auto;overflow-y:hidden;margin:0 -14px;padding:4px 14px;-webkit-overflow-scrolling:touch}
 .periodic-table{display:grid;grid-template-columns:repeat(18,32px);grid-template-rows:repeat(10,34px);gap:2px;min-width:618px;padding:4px}
 .el-cell{display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:4px;cursor:pointer;position:relative;color:#fff;line-height:1;overflow:hidden;transition:.1s}
@@ -129,6 +146,7 @@ h1 b{color:#5fb8ff}
 .cat-legend span{padding:2px 7px;border-radius:10px;color:#fff;font-weight:500}
 .periodic-hint{font-size:.72rem;color:#7ea3cc;text-align:center;margin-top:6px;margin-bottom:8px}
 .alkane-info{background:#0d2a1d;border-left:3px solid #4bd47a;padding:8px 12px;border-radius:8px;font-size:.8rem;color:#c6f3d2;margin-bottom:10px;line-height:1.45}
+.full-hint{background:#2a1d0d;border-left:3px solid #e8b060;padding:8px 12px;border-radius:8px;font-size:.76rem;color:#f3d6a6;margin-bottom:8px;line-height:1.45}
 </style>
 </head>
 <body>
@@ -162,7 +180,7 @@ h1 b{color:#5fb8ff}
         <code data-q="Гексан">Гексан</code>
         <code data-q="Метан">Метан</code>
     </div>
-    <div class="version" id="versionLine">v2.6</div>
+    <div class="version" id="versionLine">v2.7</div>
 </div>
 
 <div class="modal" id="modal">
@@ -175,19 +193,28 @@ h1 b{color:#5fb8ff}
 <div class="modal" id="updModal">
     <div class="modal-inner upd-inner">
         <button class="close-btn" id="updCloseBtn">×</button>
-        <div class="upd-title">🔄 Обновление данных</div>
+        <div class="upd-title">🔄 Обновление</div>
         <div class="upd-status info" id="updStatus">Загрузка...</div>
         <label class="upd-label" for="updUrl">URL для загрузки (raw GitHub):</label>
         <input id="updUrl" type="url" spellcheck="false" autocomplete="off">
+
+        <div class="full-hint">
+            🔄 <b>Полное обновление</b> — скачивает и заменяет весь HTML (новые функции, кнопки, вкладки).<br>
+            📥 <b>Только данные</b> — обновляет элементы/соединения/алканы без смены интерфейса.
+        </div>
+
         <div class="upd-btns">
-            <button class="btn-primary" id="updFetchBtn">Загрузить и применить</button>
-            <button class="btn-secondary" id="updResetBtn">↩ К встроенной</button>
+            <button class="btn-danger" id="updFullBtn">🔄 Полное обновление</button>
         </div>
         <div class="upd-btns" style="margin-top:8px">
-            <button class="btn-secondary" id="updTestBtn">🔍 Проверить хранилище</button>
-            <button class="btn-secondary" id="updShowGitBtn">🌐 Открыть GitHub</button>
+            <button class="btn-primary" id="updFetchBtn">📥 Только данные</button>
+            <button class="btn-secondary" id="updResetBtn">↩ Сброс</button>
         </div>
-        <div class="upd-note">💡 Скачивается база. Если на GitHub старая версия — обновление не принесёт изменений.</div>
+        <div class="upd-btns" style="margin-top:8px">
+            <button class="btn-secondary" id="updTestBtn">🔍 Хранилище</button>
+            <button class="btn-secondary" id="updShowGitBtn">🌐 GitHub</button>
+        </div>
+        <div class="upd-note">💡 После полного обновления приложение перезагрузится с новым интерфейсом.</div>
     </div>
 </div>
 
@@ -224,7 +251,6 @@ h1 b{color:#5fb8ff}
             <button class="calc-tab" data-pane="Eq">⚗️ Уравнение</button>
         </div>
 
-        <!-- Таблица Менделеева -->
         <div class="calc-pane" id="calcTablePane">
             <div class="periodic-hint">Тапните на элемент для подробностей →</div>
             <div class="periodic-wrap">
@@ -233,7 +259,6 @@ h1 b{color:#5fb8ff}
             <div class="cat-legend" id="catLegend"></div>
         </div>
 
-        <!-- Алканы -->
         <div class="calc-pane hidden" id="calcAlkPane">
             <div class="alkane-info">
                 Гомологический ряд алканов CnH2n+2. Тапните на вещество для подробностей.
@@ -241,7 +266,6 @@ h1 b{color:#5fb8ff}
             <div id="alkaneList" style="max-height:50vh;overflow-y:auto;display:flex;flex-direction:column;gap:4px"></div>
         </div>
 
-        <!-- Молярная масса -->
         <div class="calc-pane hidden" id="calcMassPane">
             <label class="upd-label">Формула:</label>
             <input id="massInput" class="calc-input" type="text" placeholder="H2O" autocomplete="off" spellcheck="false">
@@ -258,7 +282,6 @@ h1 b{color:#5fb8ff}
             <div class="calc-result" id="massResult"></div>
         </div>
 
-        <!-- Уравнение -->
         <div class="calc-pane hidden" id="calcEqPane">
             <label class="upd-label">Уравнение (? вместо неизвестного):</label>
             <input id="eqInput" class="calc-input" type="text" placeholder="H2 + ? = H2O" autocomplete="off" spellcheck="false">
@@ -282,7 +305,7 @@ h1 b{color:#5fb8ff}
 <script>
 (function(){
 'use strict';
-var BUILD='v2.6';
+var BUILD='v2.7';
 var DEFAULT_URL='https://raw.githubusercontent.com/Cheese1488/Elements/refs/heads/main/index.html';
 var LS_URL_KEY='__chem_update_url__';
 var LS_E='__chem_elements__';
@@ -292,6 +315,9 @@ var LS_A='__chem_alkanes__';
 var LS_D='__chem_updated_at__';
 var LS_B='__chem_build__';
 var LS_SHOW_FUN='__chem_show_fun__';
+var LS_FULL_HTML='__chem_full_html__';
+var LS_FULL_DATE='__chem_full_html_date__';
+var LS_FULL_BUILD='__chem_full_html_build__';
 
 var ELEMENTS=[
 [1,'H','Водород','1.008','Неметалл',1,1,['гидроген','hydrogen'],-259,-253,1766,'Самый лёгкий элемент.'],
@@ -323,775 +349,4 @@ var ELEMENTS=[
 [27,'Co','Кобальт','58.933','Переходный металл',9,4,['кобальтум','cobalt'],1495,2927,1735,'Батареи.'],
 [28,'Ni','Никель','58.693','Переходный металл',10,4,['никель','nickel'],1455,2913,1751,'Сплавы.'],
 [29,'Cu','Медь','63.546','Переходный металл',11,4,['купрум','copper'],1085,2562,'доист.','Проводник.'],
-[30,'Zn','Цинк','65.38','Переходный металл',12,4,['цинкум','zinc'],420,907,1746,'Оцинковка.'],
-[31,'Ga','Галлий','69.723','Постпереходный металл',13,4,['галлиум','gallium'],30,2204,1875,'Плавится в руке.'],
-[32,'Ge','Германий','72.630','Полуметалл',14,4,['германиум','germanium'],938,2833,1886,'Оптоволокно.'],
-[33,'As','Мышьяк','74.922','Полуметалл',15,4,['арсеникум','arsenic'],817,614,'доист.','Яд.'],
-[34,'Se','Селен','78.971','Неметалл',16,4,['селенум','selenium'],221,685,1817,'Микроэлемент.'],
-[35,'Br','Бром','79.904','Галоген',17,4,['бромум','bromine'],-7,59,1826,'Жидкость.'],
-[36,'Kr','Криптон','83.798','Благородный газ',18,4,['криптон','krypton'],-157,-153,1898,'Лампы.'],
-[37,'Rb','Рубидий','85.468','Щелочной металл',1,5,['рубидиум','rubidium'],39,688,1861,'Часы.'],
-[38,'Sr','Стронций','87.62','Щёлочноземельный металл',2,5,['стронциум','strontium'],777,1382,1790,'Фейерверки.'],
-[39,'Y','Иттрий','88.906','Переходный металл',3,5,['иттриум','yttrium'],1522,3345,1794,'LED.'],
-[40,'Zr','Цирконий','91.224','Переходный металл',4,5,['циркониум','zirconium'],1855,4409,1789,'Реакторы.'],
-[41,'Nb','Ниобий','92.906','Переходный металл',5,5,['ниобиум','niobium'],2477,4744,1801,'Магниты.'],
-[42,'Mo','Молибден','95.95','Переходный металл',6,5,['молибденум','molybdenum'],2623,4639,1781,'Сталь.'],
-[43,'Tc','Технеций','98','Переходный металл',7,5,['технециум','technetium'],2157,4265,1937,'Медицина.'],
-[44,'Ru','Рутений','101.07','Переходный металл',8,5,['рутениум','ruthenium'],2334,4150,1844,'Катализаторы.'],
-[45,'Rh','Родий','102.91','Переходный металл',9,5,['родиум','rhodium'],1964,3695,1803,'Дорогой.'],
-[46,'Pd','Палладий','106.42','Переходный металл',10,5,['палладиум','palladium'],1555,2963,1803,'Катализаторы.'],
-[47,'Ag','Серебро','107.87','Переходный металл',11,5,['аргентум','silver'],962,2162,'доист.','Проводник.'],
-[48,'Cd','Кадмий','112.41','Переходный металл',12,5,['кадмиум','cadmium'],321,767,1817,'Токсичен.'],
-[49,'In','Индий','114.82','Постпереходный металл',13,5,['индиум','indium'],157,2072,1863,'ITO.'],
-[50,'Sn','Олово','118.71','Постпереходный металл',14,5,['станнум','tin'],232,2602,'доист.','Бронза.'],
-[51,'Sb','Сурьма','121.76','Полуметалл',15,5,['стибиум','antimony'],631,1587,'доист.','Сплавы.'],
-[52,'Te','Теллур','127.60','Полуметалл',16,5,['теллуриум','tellurium'],450,988,1782,'Панели.'],
-[53,'I','Йод','126.90','Галоген',17,5,['йод','iodine'],114,184,1811,'Щитовидка.'],
-[54,'Xe','Ксенон','131.29','Благородный газ',18,5,['ксенон','xenon'],-112,-108,1898,'Лампы.'],
-[55,'Cs','Цезий','132.91','Щелочной металл',1,6,['цезиум','cesium'],28,671,1860,'Часы.'],
-[56,'Ba','Барий','137.33','Щёлочноземельный металл',2,6,['бариум','barium'],727,1897,1808,'Рентген.'],
-[57,'La','Лантан','138.91','Лантаноид',3,6,['лантанум','lanthanum'],920,3464,1839,'Оптика.'],
-[58,'Ce','Церий','140.12','Лантаноид',3,6,['цериум','cerium'],795,3443,1803,'Кремни.'],
-[59,'Pr','Празеодим','140.91','Лантаноид',3,6,['празеодимум','praseodymium'],935,3520,1885,'Магниты.'],
-[60,'Nd','Неодим','144.24','Лантаноид',3,6,['неодимум','neodymium'],1024,3074,1885,'Магниты.'],
-[61,'Pm','Прометий','145','Лантаноид',3,6,['прометиум','promethium'],1042,3000,1945,'Радиоактивен.'],
-[62,'Sm','Самарий','150.36','Лантаноид',3,6,['самариум','samarium'],1072,1794,1879,'Магниты.'],
-[63,'Eu','Европий','151.96','Лантаноид',3,6,['европиум','europium'],822,1529,1901,'Свечение.'],
-[64,'Gd','Гадолиний','157.25','Лантаноид',3,6,['гадолиниум','gadolinium'],1312,3273,1880,'МРТ.'],
-[65,'Tb','Тербий','158.93','Лантаноид',3,6,['тербиум','terbium'],1356,3230,1843,'Свечение.'],
-[66,'Dy','Диспрозий','162.50','Лантаноид',3,6,['диспрозиум','dysprosium'],1412,2567,1886,'Магниты.'],
-[67,'Ho','Гольмий','164.93','Лантаноид',3,6,['гольмиум','holmium'],1474,2700,1878,'Лазеры.'],
-[68,'Er','Эрбий','167.26','Лантаноид',3,6,['эрбиум','erbium'],1529,2868,1843,'Оптоволокно.'],
-[69,'Tm','Тулий','168.93','Лантаноид',3,6,['тулиум','thulium'],1545,1950,1879,'Рентген.'],
-[70,'Yb','Иттербий','173.05','Лантаноид',3,6,['иттербиум','ytterbium'],824,1196,1878,'Часы.'],
-[71,'Lu','Лютеций','174.97','Лантаноид',3,6,['лютециум','lutetium'],1663,3402,1907,'Онкология.'],
-[72,'Hf','Гафний','178.49','Переходный металл',4,6,['гафниум','hafnium'],2233,4603,1923,'Реакторы.'],
-[73,'Ta','Тантал','180.95','Переходный металл',5,6,['танталум','tantalum'],3017,5458,1802,'Конденсаторы.'],
-[74,'W','Вольфрам','183.84','Переходный металл',6,6,['вольфрамиум','tungsten'],3422,5555,1783,'T плавления.'],
-[75,'Re','Рений','186.21','Переходный металл',7,6,['рениум','rhenium'],3186,5596,1925,'Сплавы.'],
-[76,'Os','Осмий','190.23','Переходный металл',8,6,['осмиум','osmium'],3033,5012,1803,'Плотный.'],
-[77,'Ir','Иридий','192.22','Переходный металл',9,6,['иридиум','iridium'],2466,4428,1803,'Свечи.'],
-[78,'Pt','Платина','195.08','Переходный металл',10,6,['платинум','platinum'],1768,3825,1735,'Драгоценный.'],
-[79,'Au','Золото','196.97','Переходный металл',11,6,['аурум','gold'],1064,2856,'доист.','Драгоценный.'],
-[80,'Hg','Ртуть','200.59','Переходный металл',12,6,['гидраргирум','mercury'],-39,357,'доист.','Жидкий металл.'],
-[81,'Tl','Таллий','204.38','Постпереходный металл',13,6,['таллиум','thallium'],304,1473,1861,'Токсичен.'],
-[82,'Pb','Свинец','207.2','Постпереходный металл',14,6,['плюмбум','lead'],327,1749,'доист.','Тяжёлый.'],
-[83,'Bi','Висмут','208.98','Постпереходный металл',15,6,['бисмутум','bismuth'],271,1564,'доист.','Радужные.'],
-[84,'Po','Полоний','209','Постпереходный металл',16,6,['полониум','polonium'],254,962,1898,'Радиоактивен.'],
-[85,'At','Астат','210','Галоген',17,6,['астатум','astatine'],302,337,1940,'Редкий.'],
-[86,'Rn','Радон','222','Благородный газ',18,6,['радон','radon'],-71,-62,1899,'Радиоактивен.'],
-[87,'Fr','Франций','223','Щелочной металл',1,7,['франциум','francium'],27,677,1939,'Редкий.'],
-[88,'Ra','Радий','226','Щёлочноземельный металл',2,7,['радий','radium'],700,1737,1898,'Светится.'],
-[89,'Ac','Актиний','227','Актиноид',3,7,['актиниум','actinium'],1050,3200,1899,'Радиоактивен.'],
-[90,'Th','Торий','232.04','Актиноид',3,7,['ториум','thorium'],1750,4788,1829,'Топливо.'],
-[91,'Pa','Протактиний','231.04','Актиноид',3,7,['протактиниум','protactinium'],1572,4000,1913,'Редкий.'],
-[92,'U','Уран','238.03','Актиноид',3,7,['ураниум','uranium'],1132,4131,1789,'Топливо.'],
-[93,'Np','Нептуний','237','Актиноид',3,7,['нептуниум','neptunium'],644,3902,1940,'Радиоактивен.'],
-[94,'Pu','Плутоний','244','Актиноид',3,7,['плутониум','plutonium'],639,3228,1940,'Топливо.'],
-[95,'Am','Америций','243','Актиноид',3,7,['америциум','americium'],1176,2607,1944,'Датчики.'],
-[96,'Cm','Кюрий','247','Актиноид',3,7,['кюриум','curium'],1340,3110,1944,'Источники.'],
-[97,'Bk','Берклий','247','Актиноид',3,7,['берклиум','berkelium'],986,2627,1949,'Синтетический.'],
-[98,'Cf','Калифорний','251','Актиноид',3,7,['калифорниум','californium'],900,1472,1950,'Нейтроны.'],
-[99,'Es','Эйнштейний','252','Актиноид',3,7,['эйнштейниум','einsteinium'],860,996,1952,'Синтетический.'],
-[100,'Fm','Фермий','257','Актиноид',3,7,['фермиум','fermium'],1527,null,1952,'Синтетический.'],
-[101,'Md','Менделевий','258','Актиноид',3,7,['менделевиум','mendelevium'],827,null,1955,'Синтетический.'],
-[102,'No','Нобелий','259','Актиноид',3,7,['нобелиум','nobelium'],827,null,1966,'Синтетический.'],
-[103,'Lr','Лоуренсий','266','Актиноид',3,7,['лоуренсиум','lawrencium'],1627,null,1961,'Синтетический.'],
-[104,'Rf','Резерфордий','267','Переходный металл',4,7,['резерфордиум','rutherfordium'],2100,5500,1964,'Синтетический.'],
-[105,'Db','Дубний','268','Переходный металл',5,7,['дубниум','dubnium'],null,null,1967,'Синтетический.'],
-[106,'Sg','Сиборгий','269','Переходный металл',6,7,['сиборгиум','seaborgium'],null,null,1974,'Синтетический.'],
-[107,'Bh','Борий','270','Переходный металл',7,7,['бориум','bohrium'],null,null,1981,'Синтетический.'],
-[108,'Hs','Хассий','269','Переходный металл',8,7,['хассиум','hassium'],null,null,1984,'Синтетический.'],
-[109,'Mt','Мейтнерий','278','Переходный металл',9,7,['мейтнериум','meitnerium'],null,null,1982,'Синтетический.'],
-[110,'Ds','Дармштадтий','281','Переходный металл',10,7,['дармштадтиум','darmstadtium'],null,null,1994,'Синтетический.'],
-[111,'Rg','Рентгений','282','Переходный металл',11,7,['рентгениум','roentgenium'],null,null,1994,'Синтетический.'],
-[112,'Cn','Коперниций','285','Постпереходный металл',12,7,['копернициум','copernicium'],null,null,1996,'Синтетический.'],
-[113,'Nh','Нихоний','286','Постпереходный металл',13,7,['нихониум','nihonium'],null,null,2004,'Синтетический.'],
-[114,'Fl','Флеровий','289','Постпереходный металл',14,7,['флеровиум','flerovium'],null,null,1999,'Синтетический.'],
-[115,'Mc','Московий','290','Постпереходный металл',15,7,['московиум','moscovium'],null,null,2003,'Синтетический.'],
-[116,'Lv','Ливерморий','293','Постпереходный металл',16,7,['ливермориум','livermorium'],null,null,2000,'Синтетический.'],
-[117,'Ts','Теннессин','294','Галоген',17,7,['теннессин','tennessine'],null,null,2010,'Синтетический.'],
-[118,'Og','Оганесон','294','Благородный газ',18,7,['оганесон','oganesson'],null,null,2002,'Самый тяжёлый.']
-];
-
-var VALENCE={H:'I',He:'0',Li:'I',Be:'II',B:'III',C:'IV',N:'III, V',O:'II',F:'I',Ne:'0',Na:'I',Mg:'II',Al:'III',Si:'IV',P:'III, V',S:'II, IV, VI',Cl:'I, III, V, VII',Ar:'0',K:'I',Ca:'II',Sc:'III',Ti:'III, IV',V:'II, III, IV, V',Cr:'II, III, VI',Mn:'II, IV, VII',Fe:'II, III',Co:'II, III',Ni:'II, III',Cu:'I, II',Zn:'II',Ga:'III',Ge:'IV',As:'III, V',Se:'II, IV, VI',Br:'I, V',Kr:'0',Rb:'I',Sr:'II',Y:'III',Zr:'IV',Nb:'V',Mo:'IV, VI',Tc:'VII',Ru:'III, IV',Rh:'III',Pd:'II, IV',Ag:'I',Cd:'II',In:'III',Sn:'II, IV',Sb:'III, V',Te:'II, IV, VI',I:'I, V, VII',Xe:'0',Cs:'I',Ba:'II',La:'III',Ce:'III, IV',Pr:'III',Nd:'III',Pm:'III',Sm:'III',Eu:'II, III',Gd:'III',Tb:'III, IV',Dy:'III',Ho:'III',Er:'III',Tm:'III',Yb:'II, III',Lu:'III',Hf:'IV',Ta:'V',W:'VI',Re:'VII',Os:'VIII',Ir:'III, IV',Pt:'II, IV',Au:'I, III',Hg:'I, II',Tl:'I, III',Pb:'II, IV',Bi:'III, V',Po:'II, IV',At:'I, VII',Rn:'0',Fr:'I',Ra:'II',Ac:'III',Th:'IV',Pa:'V',U:'VI',Np:'V',Pu:'IV',Am:'III',Cm:'III',Bk:'III',Cf:'III',Es:'III',Fm:'III',Md:'III',No:'II',Lr:'III',Rf:'IV',Db:'V',Sg:'VI',Bh:'VII',Hs:'VIII',Mt:'—',Ds:'—',Rg:'—',Cn:'—',Nh:'—',Fl:'—',Mc:'—',Lv:'—',Ts:'—',Og:'—'};
-
-var COMPOUNDS=[
-{name:'Вода',formula:'H2O',desc:'оксид водорода'},
-{name:'Углекислый газ',formula:'CO2',desc:'диоксид углерода'},
-{name:'Поваренная соль',formula:'NaCl',desc:'хлорид натрия'},
-{name:'Серная кислота',formula:'H2SO4',desc:'сильная кислота'},
-{name:'Аммиак',formula:'NH3',desc:'нитрид водорода'},
-{name:'Глюкоза',formula:'C6H12O6',desc:'моносахарид'},
-{name:'Спирт этиловый',formula:'C2H5OH',desc:'этанол'},
-{name:'Угарный газ',formula:'CO',desc:'монооксид углерода'},
-{name:'Озон',formula:'O3',desc:'модификация кислорода'},
-{name:'Перекись водорода',formula:'H2O2',desc:'пероксид водорода'},
-{name:'Сода пищевая',formula:'NaHCO3',desc:'гидрокарбонат натрия'},
-{name:'Известь',formula:'CaCO3',desc:'карбонат кальция'}
-];
-
-var ALKANES=[
-{n:1,name:'Метан',formula:'CH4',aliases:['метан','methane','болотный газ']},
-{n:2,name:'Этан',formula:'C2H6',aliases:['этан','ethane']},
-{n:3,name:'Пропан',formula:'C3H8',aliases:['пропан','propane']},
-{n:4,name:'Бутан',formula:'C4H10',aliases:['бутан','butane']},
-{n:5,name:'Пентан',formula:'C5H12',aliases:['пентан','pentane']},
-{n:6,name:'Гексан',formula:'C6H14',aliases:['гексан','гексан','hexane','гиксан']},
-{n:7,name:'Гептан',formula:'C7H16',aliases:['гептан','heptane']},
-{n:8,name:'Октан',formula:'C8H18',aliases:['октан','octane']},
-{n:9,name:'Нонан',formula:'C9H20',aliases:['нонан','nonane']},
-{n:10,name:'Декан',formula:'C10H22',aliases:['декан','decane']},
-{n:11,name:'Ундекан',formula:'C11H24',aliases:['ундекан','undecane']},
-{n:12,name:'Додекан',formula:'C12H26',aliases:['додекан','dodecane']},
-{n:13,name:'Тридекан',formula:'C13H28',aliases:['тридекан','tridecane']},
-{n:14,name:'Тетрадекан',formula:'C14H30',aliases:['тетрадекан','tetradecane']},
-{n:15,name:'Пентадекан',formula:'C15H32',aliases:['пентадекан','pentadecane']},
-{n:16,name:'Гексадекан',formula:'C16H34',aliases:['гексадекан','hexadecane','цетан']},
-{n:17,name:'Гептадекан',formula:'C17H36',aliases:['гептадекан','heptadecane']},
-{n:18,name:'Октадекан',formula:'C18H38',aliases:['октадекан','octadecane']},
-{n:19,name:'Нонадекан',formula:'C19H40',aliases:['нонадекан','nonadecane']},
-{n:20,name:'Эйкозан',formula:'C20H42',aliases:['эйкозан','eicosane']},
-{n:21,name:'Генэйкозан',formula:'C21H44',aliases:['генэйкозан','heneicosane']},
-{n:22,name:'Докозан',formula:'C22H46',aliases:['докозан','docosane']},
-{n:23,name:'Трикозан',formula:'C23H48',aliases:['трикозан','tricosane']},
-{n:24,name:'Тетракозан',formula:'C24H50',aliases:['тетракозан','tetracosane']},
-{n:25,name:'Пентакозан',formula:'C25H52',aliases:['пентакозан','pentacosane']},
-{n:26,name:'Гексакозан',formula:'C26H54',aliases:['гексакозан','hexacosane']},
-{n:27,name:'Гептакозан',formula:'C27H56',aliases:['гептакозан','heptacosane']},
-{n:28,name:'Октакозан',formula:'C28H58',aliases:['октакозан','octacosane']},
-{n:29,name:'Нонакозан',formula:'C29H60',aliases:['нонакозан','nonacosane']},
-{n:30,name:'Триаконтан',formula:'C30H62',aliases:['триаконтан','triacontane']}
-];
-
-var FUN_ELEMENTS=[
-{num:999,sym:'Kb',name:'Коч-Братаниум',mass:'???',cat:'Меметический элемент',group:'—',period:'—',aliases:['коч','братаниум','kochbratanium'],melt:null,boil:null,year:'наши дни',desc:'Легендарный элемент.'},
-{num:1000,sym:'El',name:'Эль-Патрониум',mass:'???',cat:'Меметический элемент',group:'—',period:'—',aliases:['эль-патрониум','эльпатрониум','elpatron','патрон'],melt:null,boil:null,year:'наши дни',desc:'Покровитель мемов.'},
-{num:1001,sym:'Gu',name:'Гуртовенкум',mass:'???',cat:'Меметический элемент',group:'—',period:'—',aliases:['гуртовенкум','гурт','gurtovenk'],melt:null,boil:null,year:'наши дни',desc:'Нестабилен.'},
-{num:1002,sym:'Pn',name:'Пантерий',mass:'???',cat:'Меметический элемент',group:'—',period:'—',aliases:['пантерий','пантер','panther'],melt:null,boil:null,year:'наши дни',desc:'Хищный элемент.'},
-{num:1003,sym:'Tf',name:'Телифоний',mass:'???',cat:'Меметический элемент',group:'—',period:'—',aliases:['телифоний','телефон','telifon'],melt:null,boil:null,year:'наши дни',desc:'Элемент связи.'}
-];
-
-(function loadSaved(){
-    try{
-        var sE=localStorage.getItem(LS_E),sC=localStorage.getItem(LS_C),sF=localStorage.getItem(LS_F),sA=localStorage.getItem(LS_A);
-        if(sE){var p=JSON.parse(sE);if(Array.isArray(p)&&p.length>100)ELEMENTS=p;}
-        if(sC){var pc=JSON.parse(sC);if(Array.isArray(pc)&&pc.length>0)COMPOUNDS=pc;}
-        if(sF){var pf=JSON.parse(sF);if(Array.isArray(pf)&&pf.length>0)FUN_ELEMENTS=pf;}
-        if(sA){var pa=JSON.parse(sA);if(Array.isArray(pa)&&pa.length>0)ALKANES=pa;}
-    }catch(e){}
-})();
-
-var showFun=true;
-try{var v=localStorage.getItem(LS_SHOW_FUN);if(v==='0')showFun=false;}catch(e){}
-
-var DB=[];
-function rebuildDB(){
-    DB=[];
-    ELEMENTS.forEach(function(e){DB.push({type:'el',num:e[0],sym:e[1],name:e[2],mass:e[3],cat:e[4],group:e[5],period:e[6],aliases:e[7],melt:e[8],boil:e[9],year:e[10],desc:e[11],formula:e[1],display:e[1]});});
-    COMPOUNDS.forEach(function(c){DB.push({type:'comp',name:c.name,formula:c.formula,display:c.formula,desc:c.desc,aliases:[]});});
-    ALKANES.forEach(function(a){
-        DB.push({type:'alkane',num:a.n,name:a.name,formula:a.formula,display:a.formula,aliases:a.aliases||[],desc:'Алкан CnH2n+2, n='+a.n});
-    });
-    if(showFun){FUN_ELEMENTS.forEach(function(f){DB.push({type:'fun',num:f.num,sym:f.sym,name:f.name,mass:f.mass,cat:f.cat,group:f.group,period:f.period,aliases:f.aliases,melt:f.melt,boil:f.boil,year:f.year,desc:f.desc,formula:f.sym,display:f.sym});});}
-}
-
-var input=document.getElementById('search');
-var results=document.getElementById('results');
-var counter=document.getElementById('counter');
-var statusLine=document.getElementById('statusLine');
-var versionLine=document.getElementById('versionLine');
-var modal=document.getElementById('modal');
-var modalContent=document.getElementById('modalContent');
-var closeBtn=document.getElementById('closeBtn');
-var updModal=document.getElementById('updModal');
-var updOpenBtn=document.getElementById('updOpenBtn');
-var updCloseBtn=document.getElementById('updCloseBtn');
-var updStatus=document.getElementById('updStatus');
-var updUrl=document.getElementById('updUrl');
-var updFetchBtn=document.getElementById('updFetchBtn');
-var updResetBtn=document.getElementById('updResetBtn');
-var updTestBtn=document.getElementById('updTestBtn');
-var updShowGitBtn=document.getElementById('updShowGitBtn');
-var setModal=document.getElementById('setModal');
-var setOpenBtn=document.getElementById('setOpenBtn');
-var setCloseBtn=document.getElementById('setCloseBtn');
-var funToggle=document.getElementById('funToggle');
-var funListItems=document.getElementById('funListItems');
-var menuModal=document.getElementById('menuModal');
-var menuOpenBtn=document.getElementById('menuOpenBtn');
-var menuCloseBtn=document.getElementById('menuCloseBtn');
-
-function esc(s){if(s===null||s===undefined)return '—';return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
-function getSavedDate(){try{return localStorage.getItem(LS_D);}catch(e){return null;}}
-function hasSavedData(){try{return !!localStorage.getItem(LS_E);}catch(e){return false;}}
-function getSavedBuild(){try{return localStorage.getItem(LS_B);}catch(e){return null;}}
-
-function getAtomicMassStr(sym){for(var i=0;i<ELEMENTS.length;i++){if(ELEMENTS[i][1]===sym)return ELEMENTS[i][3];}return null;}
-function getValence(sym){return VALENCE[sym]||'—';}
-function findElByNum(num){for(var i=0;i<DB.length;i++){if(DB[i].type==='el'&&DB[i].num===num)return DB[i];}return null;}
-
-function updateStatus(){
-    var saved=hasSavedData(),date=getSavedDate();
-    if(saved){
-        var d=date?new Date(date):null;
-        var dStr=d?d.toLocaleDateString('ru-RU')+' '+d.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'}):'';
-        statusLine.textContent='📦 '+dStr;
-        versionLine.textContent=BUILD+' · данные с GitHub';
-    }else{
-        statusLine.textContent='📦 встроенные';
-        versionLine.textContent=BUILD+' · встроенные данные';
-    }
-    var lastEl='';
-    for(var z=DB.length-1;z>=0;z--){if(DB[z].type==='el'){lastEl=DB[z].sym+' №'+DB[z].num;break;}}
-    var funCount=showFun?FUN_ELEMENTS.length:0;
-    counter.textContent='✓ '+DB.length+' записей · 🧪'+ALKANES.length+' · '+(funCount?'🎉'+funCount+' · ':'')+lastEl;
-}
-
-function search(q){
-    var s=q.trim().toLowerCase();
-    if(!s)return [];
-    var out=[];
-    for(var i=0;i<DB.length;i++){
-        var item=DB[i],best=0,matchedBy='';
-        if(item.name){var ln=item.name.toLowerCase();if(ln===s){best=Math.max(best,1000);matchedBy='name';}else if(ln.indexOf(s)===0){best=Math.max(best,500);matchedBy='name';}else if(ln.indexOf(s)!==-1){best=Math.max(best,100);matchedBy='name';}}
-        if(item.sym){var ls=item.sym.toLowerCase();if(ls===s){best=Math.max(best,1050);matchedBy='sym';}else if(ls.indexOf(s)===0){best=Math.max(best,550);matchedBy='sym';}}
-        if(item.formula){var lf=item.formula.toLowerCase();if(lf===s){best=Math.max(best,1050);matchedBy='formula';}else if(lf.indexOf(s)===0){best=Math.max(best,550);matchedBy='formula';}}
-        if(item.aliases){for(var k=0;k<item.aliases.length;k++){var la=item.aliases[k].toLowerCase();if(la===s){best=Math.max(best,950);if(!matchedBy)matchedBy='alias';}else if(la.indexOf(s)===0){best=Math.max(best,480);if(!matchedBy)matchedBy='alias';}else if(la.indexOf(s)!==-1){best=Math.max(best,90);if(!matchedBy)matchedBy='alias';}}}
-        if(best>0)out.push({item:item,score:best,matchedBy:matchedBy});
-    }
-    out.sort(function(a,b){if(b.score!==a.score)return b.score-a.score;return (a.item.name||'').localeCompare(b.item.name||'');});
-    return out;
-}
-
-function render(q){
-    if(!q.trim()){results.innerHTML='<div class="empty">Введите запрос — здесь появятся совпадения<br><br>Нажмите на элемент, чтобы увидеть всю информацию</div>';return;}
-    var matches=search(q);
-    if(!matches.length){results.innerHTML='<div class="empty">🔍 Ничего не найдено<br>Попробуйте другое название, символ или произношение</div>';return;}
-    var html='';
-    for(var i=0;i<matches.length;i++){
-        var m=matches[i],it=m.item;
-        var cls='row'+(i===0?' best':'')+(it.type==='fun'?' fun':'')+(it.type==='alkane'?' alkane':'');
-        var aliasIcon=m.matchedBy==='alias'?' 🔊':'';
-        var meta='';
-        if(it.type==='el')meta='№'+it.num+' · '+it.cat;
-        else if(it.type==='comp')meta=it.desc||'соединение';
-        else if(it.type==='alkane')meta='Алкан · n='+it.num;
-        else meta='🎉 '+it.cat;
-        html+='<div class="'+cls+'" data-idx="'+i+'">'
-            +'<div class="sym">'+esc(it.display)+'</div>'
-            +'<div class="info"><div class="name">'+esc(it.name)+aliasIcon+'</div>'
-            +'<div class="meta">'+esc(meta)+'</div></div>'
-            +'<div class="formula">'+esc(it.formula)+'</div>'
-            +'</div>';
-    }
-    results.innerHTML=html;
-    window.__matches=matches;
-    var rows=results.querySelectorAll('.row');
-    for(var j=0;j<rows.length;j++){
-        rows[j].addEventListener('click',function(){
-            var idx=parseInt(this.getAttribute('data-idx'),10);
-            if(window.__matches&&window.__matches[idx])openModal(window.__matches[idx].item);
-        });
-    }
-}
-
-function openModal(item){
-    var html='';
-    html+='<div class="m-head"><div class="m-sym">'+esc(item.display)+'</div>'
-        +'<div class="m-name"><h2>'+esc(item.name)+'</h2>'
-        +'<p>'+(item.type==='el'?'Элемент №'+item.num:(item.type==='comp'?'Химическое соединение':(item.type==='alkane'?'Алкан (гомологический ряд)':'🎉 Мемный элемент №'+item.num)))+'</p>'
-        +'</div></div>';
-    if(item.aliases&&item.aliases.length){
-        html+='<div class="m-pron"><div class="m-pron-label">🔊 Произношение / альтернативные названия:</div><div class="m-pron-list">';
-        for(var i=0;i<item.aliases.length;i++)html+='<span>'+esc(item.aliases[i])+'</span>';
-        html+='</div></div>';
-    }
-    html+='<div class="m-table">';
-    if(item.type==='el'||item.type==='fun'){
-        html+='<div class="m-row"><span class="k">Символ</span><span class="v">'+esc(item.sym)+'</span></div>';
-        html+='<div class="m-row"><span class="k">Атомный номер</span><span class="v">'+esc(item.num)+'</span></div>';
-        html+='<div class="m-row"><span class="k">Атомная масса</span><span class="v">'+esc(item.mass)+' а.е.м.</span></div>';
-        html+='<div class="m-row"><span class="k">Валентность</span><span class="v">'+esc(getValence(item.sym))+'</span></div>';
-        html+='<div class="m-row"><span class="k">Категория</span><span class="v">'+esc(item.cat)+'</span></div>';
-        html+='<div class="m-row"><span class="k">Группа</span><span class="v">'+esc(item.group)+'</span></div>';
-        html+='<div class="m-row"><span class="k">Период</span><span class="v">'+esc(item.period)+'</span></div>';
-        html+='<div class="m-row"><span class="k">T плавления</span><span class="v">'+(item.melt!==null&&item.melt!==undefined?esc(item.melt)+' °C':'—')+'</span></div>';
-        html+='<div class="m-row"><span class="k">T кипения</span><span class="v">'+(item.boil!==null&&item.boil!==undefined?esc(item.boil)+' °C':'—')+'</span></div>';
-        html+='<div class="m-row"><span class="k">Год открытия</span><span class="v">'+esc(item.year)+'</span></div>';
-    }else if(item.type==='comp'){
-        html+='<div class="m-row"><span class="k">Формула</span><span class="v">'+esc(item.formula)+'</span></div>';
-        html+='<div class="m-row"><span class="k">Тип</span><span class="v">'+esc(item.desc||'соединение')+'</span></div>';
-    }else if(item.type==='alkane'){
-        var mm=molarMass(item.formula);
-        html+='<div class="m-row"><span class="k">Формула</span><span class="v">'+esc(item.formula)+'</span></div>';
-        html+='<div class="m-row"><span class="k">Число атомов C</span><span class="v">'+esc(item.num)+'</span></div>';
-        html+='<div class="m-row"><span class="k">Общая формула</span><span class="v">C'+item.num+'H'+(2*item.num+2)+'</span></div>';
-        if(!mm.error)html+='<div class="m-row"><span class="k">Молярная масса</span><span class="v">'+mm.total.toFixed(3)+' г/моль</span></div>';
-        html+='<div class="m-row"><span class="k">Ряд</span><span class="v">Алканы (CnH2n+2)</span></div>';
-    }
-    html+='</div>';
-    if(item.desc)html+='<div class="m-desc">'+esc(item.desc)+'</div>';
-    modalContent.innerHTML=html;
-    modal.classList.add('show');
-    modal.scrollTop=0;
-}
-function closeModal(){modal.classList.remove('show');}
-closeBtn.addEventListener('click',closeModal);
-modal.addEventListener('click',function(e){if(e.target===modal)closeModal();});
-document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeModal();updModal.classList.remove('show');setModal.classList.remove('show');menuModal.classList.remove('show');}});
-
-function getUpdateUrl(){try{return localStorage.getItem(LS_URL_KEY)||DEFAULT_URL;}catch(e){return DEFAULT_URL;}}
-function setUpdateUrl(u){try{localStorage.setItem(LS_URL_KEY,u);}catch(e){}}
-
-function openUpdModal(){
-    updUrl.value=getUpdateUrl();
-    var saved=hasSavedData(),date=getSavedDate(),savedB=getSavedBuild();
-    if(saved&&date){
-        var d=new Date(date);
-        updStatus.className='upd-status info';
-        updStatus.innerHTML='📦 <b>Данные с GitHub</b><br>Сборка: '+esc(savedB||'—')+'<br>Обновлено: '+d.toLocaleString('ru-RU')+'<br>Элементов: '+ELEMENTS.length+', алканов: '+ALKANES.length+', мемных: '+FUN_ELEMENTS.length;
-    }else{
-        updStatus.className='upd-status info';
-        updStatus.innerHTML='📦 <b>Встроенные данные</b><br>Сборка: '+BUILD+'<br>Элементов: '+ELEMENTS.length+', алканов: '+ALKANES.length+', мемных: '+FUN_ELEMENTS.length;
-    }
-    updFetchBtn.disabled=false;
-    updFetchBtn.textContent='Загрузить и применить';
-    updModal.classList.add('show');
-}
-function closeUpdModal(){updModal.classList.remove('show');}
-updOpenBtn.addEventListener('click',openUpdModal);
-updCloseBtn.addEventListener('click',closeUpdModal);
-updModal.addEventListener('click',function(e){if(e.target===updModal)closeUpdModal();});
-updUrl.addEventListener('change',function(){setUpdateUrl(updUrl.value.trim());});
-
-updTestBtn.addEventListener('click',function(){
-    var lines=[];
-    try{
-        var tk='__chem_test_'+Date.now();
-        localStorage.setItem(tk,'hello');
-        var rb=localStorage.getItem(tk);
-        localStorage.removeItem(tk);
-        lines.push('localStorage: '+(rb==='hello'?'<b style="color:#4bd47a">✅ работает</b>':'<b style="color:#d95a5a">❌ не работает</b>'));
-    }catch(e){lines.push('localStorage: <b style="color:#d95a5a">❌ ошибка</b> — '+esc(e.message));}
-    lines.push('');
-    lines.push('Сборка в APK: <b>'+BUILD+'</b>');
-    lines.push('Встроено: '+ELEMENTS.length+' эл., '+ALKANES.length+' алк., '+FUN_ELEMENTS.length+' мем.');
-    var sE=localStorage.getItem(LS_E);
-    if(sE){try{var p=JSON.parse(sE);lines.push('Сохранено элементов: <b>'+p.length+'</b>');}catch(e){}lines.push('Сборка сохранённых: <b>'+esc(getSavedBuild()||'—')+'</b>');}
-    else{lines.push('Сохранённых данных: <b style="color:#e8b060">нет</b>');}
-    updStatus.className='upd-status info';
-    updStatus.innerHTML=lines.join('<br>');
-});
-
-updShowGitBtn.addEventListener('click',function(){
-    var u=updUrl.value.trim()||DEFAULT_URL;
-    try{window.open(u,'_blank');}catch(e){alert(u);}
-});
-
-function renderFunList(){
-    var html='';
-    FUN_ELEMENTS.forEach(function(f){html+='<span>'+esc(f.sym)+' · '+esc(f.name)+'</span>';});
-    funListItems.innerHTML=html||'<span>нет</span>';
-}
-function openSetModal(){funToggle.checked=showFun;renderFunList();setModal.classList.add('show');}
-function closeSetModal(){setModal.classList.remove('show');}
-setOpenBtn.addEventListener('click',openSetModal);
-setCloseBtn.addEventListener('click',closeSetModal);
-setModal.addEventListener('click',function(e){if(e.target===setModal)closeSetModal();});
-funToggle.addEventListener('change',function(){
-    showFun=funToggle.checked;
-    try{localStorage.setItem(LS_SHOW_FUN,showFun?'1':'0');}catch(e){}
-    rebuildDB();updateStatus();render(input.value);
-});
-
-/* ============ МЕНЮ (СПРАВОЧНИК) ============ */
-menuOpenBtn.addEventListener('click',function(){
-    menuModal.classList.add('show');
-    menuModal.scrollTop=0;
-    if(!menuModal.dataset.built){
-        buildPeriodicTable();
-        buildAlkaneList();
-        menuModal.dataset.built='1';
-    }
-});
-menuCloseBtn.addEventListener('click',function(){menuModal.classList.remove('show');});
-menuModal.addEventListener('click',function(e){if(e.target===menuModal)menuModal.classList.remove('show');});
-
-document.querySelectorAll('#menuModal .calc-tab').forEach(function(tab){
-    tab.addEventListener('click',function(){
-        document.querySelectorAll('#menuModal .calc-tab').forEach(function(t){t.classList.remove('active');});
-        document.querySelectorAll('#menuModal .calc-pane').forEach(function(p){p.classList.add('hidden');});
-        this.classList.add('active');
-        var pane=document.getElementById('calc'+this.dataset.pane+'Pane');
-        if(pane)pane.classList.remove('hidden');
-    });
-});
-document.querySelectorAll('[data-calc]').forEach(function(c){c.addEventListener('click',function(){document.getElementById('massInput').value=this.dataset.calc;});});
-document.querySelectorAll('[data-eq]').forEach(function(c){c.addEventListener('click',function(){document.getElementById('eqInput').value=this.dataset.eq;});});
-
-var CAT_COLORS={
-'Неметалл':'#2980b9',
-'Благородный газ':'#8e44ad',
-'Щелочной металл':'#c0392b',
-'Щёлочноземельный металл':'#d35400',
-'Полуметалл':'#16a085',
-'Галоген':'#1abc9c',
-'Переходный металл':'#d4a600',
-'Постпереходный металл':'#7f8c8d',
-'Лантаноид':'#e91e63',
-'Актиноид':'#ad1457'
-};
-
-function buildPeriodicTable(){
-    var cont=document.getElementById('periodicTable');
-    var html='';
-    // main grid
-    for(var i=0;i<DB.length;i++){
-        var it=DB[i];
-        if(it.type!=='el')continue;
-        var num=it.num;
-        if(num>=57&&num<=71)continue;
-        if(num>=89&&num<=103)continue;
-        html+='<div class="el-cell" data-num="'+num+'" style="grid-column:'+it.group+';grid-row:'+it.period+';background:'+(CAT_COLORS[it.cat]||'#546e7a')+'"><span class="num">'+num+'</span><span class="sym">'+esc(it.sym)+'</span></div>';
-    }
-    // placeholders for La/Ac
-    html+='<div class="el-cell placeholder" style="grid-column:3;grid-row:6;">*</div>';
-    html+='<div class="el-cell placeholder" style="grid-column:3;grid-row:7;">**</div>';
-    // labels
-    html+='<div class="el-cell label" style="grid-column:2;grid-row:9;">*</div>';
-    html+='<div class="el-cell label" style="grid-column:2;grid-row:10;">**</div>';
-    // lanthanides (row 9, cols 3-17)
-    for(var i=0;i<DB.length;i++){
-        var it=DB[i];
-        if(it.type!=='el')continue;
-        var num=it.num;
-        if(num>=57&&num<=71){
-            var col=3+(num-57);
-            html+='<div class="el-cell" data-num="'+num+'" style="grid-column:'+col+';grid-row:9;background:'+(CAT_COLORS[it.cat]||'#e91e63')+'"><span class="num">'+num+'</span><span class="sym">'+esc(it.sym)+'</span></div>';
-        }
-    }
-    // actinides (row 10)
-    for(var i=0;i<DB.length;i++){
-        var it=DB[i];
-        if(it.type!=='el')continue;
-        var num=it.num;
-        if(num>=89&&num<=103){
-            var col=3+(num-89);
-            html+='<div class="el-cell" data-num="'+num+'" style="grid-column:'+col+';grid-row:10;background:'+(CAT_COLORS[it.cat]||'#ad1457')+'"><span class="num">'+num+'</span><span class="sym">'+esc(it.sym)+'</span></div>';
-        }
-    }
-    cont.innerHTML=html;
-    // legend
-    var leg='';
-    for(var cat in CAT_COLORS){leg+='<span style="background:'+CAT_COLORS[cat]+'">'+esc(cat)+'</span>';}
-    document.getElementById('catLegend').innerHTML=leg;
-    // taps
-    cont.querySelectorAll('.el-cell[data-num]').forEach(function(cell){
-        cell.addEventListener('click',function(){
-            var num=parseInt(this.dataset.num,10);
-            var item=findElByNum(num);
-            if(item){menuModal.classList.remove('show');openModal(item);}
-        });
-    });
-}
-
-function buildAlkaneList(){
-    var cont=document.getElementById('alkaneList');
-    var html='';
-    ALKANES.forEach(function(a){
-        html+='<div class="row alkane" data-alk="'+a.n+'" style="cursor:pointer">'
-            +'<div class="sym">'+esc(a.formula)+'</div>'
-            +'<div class="info"><div class="name">'+esc(a.name)+'</div>'
-            +'<div class="meta">Алкан · n='+a.n+' · C'+a.n+'H'+(2*a.n+2)+'</div></div>'
-            +'</div>';
-    });
-    cont.innerHTML=html;
-    cont.querySelectorAll('.row[data-alk]').forEach(function(row){
-        row.addEventListener('click',function(){
-            var n=parseInt(this.dataset.alk,10);
-            for(var i=0;i<DB.length;i++){
-                if(DB[i].type==='alkane'&&DB[i].num===n){menuModal.classList.remove('show');openModal(DB[i]);return;}
-            }
-        });
-    });
-}
-
-/* ============ КАЛЬКУЛЯТОР ============ */
-function parseFormula(f){
-    f=String(f).replace(/\s+/g,'');
-    if(!f)return null;
-    var pos=0;
-    function parseGroup(){
-        var res={};
-        while(pos<f.length){
-            var c=f[pos];
-            if(c==='('){
-                pos++;var inner=parseGroup();
-                if(inner===null)return null;
-                if(f[pos]!==')')return null;
-                pos++;var num='';
-                while(pos<f.length&&/\d/.test(f[pos]))num+=f[pos++];
-                var mult=num?parseInt(num,10):1;
-                for(var k in inner)res[k]=(res[k]||0)+inner[k]*mult;
-            }else if(c===')'){return res;}
-            else if(/[A-Z]/.test(c)){
-                var el=c;pos++;
-                while(pos<f.length&&/[a-z]/.test(f[pos]))el+=f[pos++];
-                var num2='';
-                while(pos<f.length&&/\d/.test(f[pos]))num2+=f[pos++];
-                var cnt=num2?parseInt(num2,10):1;
-                res[el]=(res[el]||0)+cnt;
-            }else{return null;}
-        }
-        return res;
-    }
-    return parseGroup();
-}
-function molarMass(formula){
-    var parsed=parseFormula(formula);
-    if(!parsed)return {error:'Не удалось разобрать формулу'};
-    var total=0,parts=[];
-    for(var el in parsed){
-        var massStr=getAtomicMassStr(el);
-        if(massStr===null)return {error:'Неизвестный элемент: '+el};
-        var m=parseFloat(massStr);
-        if(isNaN(m))return {error:'Не удалось определить массу '+el};
-        total+=m*parsed[el];
-        parts.push({el:el,count:parsed[el],mass:m});
-    }
-    return {total:total,parts:parts};
-}
-document.getElementById('massCalcBtn').addEventListener('click',function(){
-    var f=document.getElementById('massInput').value.trim();
-    var out=document.getElementById('massResult');
-    if(!f){out.innerHTML='<div class="calc-err">Введите формулу</div>';return;}
-    var r=molarMass(f);
-    if(r.error){out.innerHTML='<div class="calc-err">❌ '+esc(r.error)+'</div>';return;}
-    var detail=r.parts.map(function(p){return '<span>'+p.el+': '+p.count+' × '+p.mass+'</span>';}).join(' + ');
-    out.innerHTML='<div class="calc-ok">✓ Молярная масса '+esc(f)+' = <b>'+r.total.toFixed(3)+'</b> г/моль</div><div class="calc-detail">'+detail+'</div>';
-});
-
-function balanceEquation(str){
-    var parts=str.split('=');
-    if(parts.length!==2)return {error:'Нужно ровно одно "=" в уравнении'};
-    var left=parts[0].split('+').map(function(s){return s.trim();}).filter(function(s){return s;});
-    var right=parts[1].split('+').map(function(s){return s.trim();}).filter(function(s){return s;});
-    if(!left.length||!right.length)return {error:'Одна из частей пустая'};
-    var subs=left.concat(right);var n=subs.length;var parsed=[];
-    for(var i=0;i<n;i++){
-        var p=parseFormula(subs[i]);
-        if(!p)return {error:'Не удалось разобрать: '+subs[i]};
-        for(var el in p){if(getAtomicMassStr(el)===null)return {error:'Неизвестный элемент: '+el};}
-        parsed.push(p);
-    }
-    var elSet={};parsed.forEach(function(p){for(var el in p)elSet[el]=true;});
-    var els=Object.keys(elSet);var m=els.length;var A=[];
-    for(var i=0;i<m;i++){A[i]=[];for(var j=0;j<n;j++){var cnt=parsed[j][els[i]]||0;A[i][j]=j<left.length?cnt:-cnt;}}
-    var M=A.map(function(row){return row.slice();});var pivotCols=[],r=0;
-    for(var c=0;c<n&&r<m;c++){
-        var maxRow=-1,maxVal=0;
-        for(var i=r;i<m;i++){if(Math.abs(M[i][c])>maxVal){maxVal=Math.abs(M[i][c]);maxRow=i;}}
-        if(maxVal<1e-9)continue;
-        var tmp=M[r];M[r]=M[maxRow];M[maxRow]=tmp;
-        var pv=M[r][c];for(var j=c;j<n;j++)M[r][j]/=pv;
-        for(var i=0;i<m;i++){if(i===r)continue;var f=M[i][c];if(Math.abs(f)<1e-9)continue;for(var j=c;j<n;j++)M[i][j]-=f*M[r][j];}
-        pivotCols.push(c);r++;
-    }
-    var freeCols=[];for(var c=0;c<n;c++)if(pivotCols.indexOf(c)===-1)freeCols.push(c);
-    if(!freeCols.length)return {error:'Уравнение уже сбалансировано или решения нет'};
-    if(freeCols.length>1)return {error:'Уравнение имеет бесконечно много решений'};
-    var fc=freeCols[0];var x=new Array(n).fill(0);x[fc]=1;
-    for(var rr=0;rr<pivotCols.length;rr++)x[pivotCols[rr]]=-M[rr][fc];
-    function gcd(a,b){a=Math.abs(a);b=Math.abs(b);while(b){var t=b;b=a%b;a=t;}return a;}
-    function lcm(a,b){return Math.abs(a*b)/gcd(a,b);}
-    var denoms=x.map(function(v){for(var k=1;k<=1000;k++)if(Math.abs(v*k-Math.round(v*k))<1e-6)return k;return 1000;});
-    var L=denoms.reduce(function(a,b){return lcm(a,b);},1);
-    var intX=x.map(function(v){return Math.round(v*L);});
-    var g=intX.reduce(function(a,b){return gcd(a,b);},0);
-    if(g>1)intX=intX.map(function(v){return v/g;});
-    if(intX.some(function(v){return v<0;}))intX=intX.map(function(v){return -v;});
-    if(intX.some(function(v){return v===0||v<0;}))return {error:'Не удалось получить корректные коэффициенты'};
-    function renderSide(list,start){
-        var out=[];
-        for(var i=0;i<list.length;i++){var c=intX[start+i];var prefix=(c===1)?'':c;out.push(prefix+list[i]);}
-        return out.join(' + ');
-    }
-    return {result: renderSide(left,0)+' = '+renderSide(right,left.length),coeffs: intX};
-}
-
-function solveWithQuestion(eqStr){
-    var parts=eqStr.split('=');
-    if(parts.length!==2)return {error:'Нужно ровно одно "="'};
-    var left=parts[0].split('+').map(function(s){return s.trim();}).filter(function(s){return s;});
-    var right=parts[1].split('+').map(function(s){return s.trim();}).filter(function(s){return s;});
-    var qL=left.indexOf('?');var qR=right.indexOf('?');
-    if(qL===-1&&qR===-1)return null;
-    if(qL!==-1&&qR!==-1)return {error:'Только один ? допустим'};
-    var qIdxGlobal=qL!==-1?qL:(left.length+qR);
-    var allEls={};
-    left.forEach(function(t){if(t!=='?'){var p=parseFormula(t);if(p)for(var el in p)allEls[el]=true;}});
-    right.forEach(function(t){if(t!=='?'){var p=parseFormula(t);if(p)for(var el in p)allEls[el]=true;}});
-    var els=Object.keys(allEls);
-    var candidates=[];
-    var diatomic={H:true,N:true,O:true,F:true,Cl:true,Br:true,I:true};
-    els.forEach(function(el){if(diatomic[el])candidates.push(el+'2');});
-    els.forEach(function(el){candidates.push(el);});
-    var common=['H2O','H2O2','CO','CO2','SO2','SO3','NO','NO2','N2O','NH3','CH4','HCl','H2S','O3'];
-    common.forEach(function(c){
-        var p=parseFormula(c);
-        if(p){var allIn=Object.keys(p).every(function(el){return allEls[el];});if(allIn)candidates.push(c);}
-    });
-    candidates=candidates.filter(function(c,i){return candidates.indexOf(c)===i;});
-    for(var ci=0;ci<candidates.length;ci++){
-        var formula=candidates[ci];
-        var newLeft=left.map(function(t,i){return i===qL?formula:t;});
-        var newRight=right.map(function(t,i){return i===qR?formula:t;});
-        var eqStr2=newLeft.join(' + ')+' = '+newRight.join(' + ');
-        var bal=balanceEquation(eqStr2);
-        if(bal.error)continue;
-        var coeffs=bal.coeffs.slice();
-        var qCoeff=coeffs[qIdxGlobal];
-        if(!qCoeff||qCoeff<=0)continue;
-        if(qCoeff>1){
-            var canDiv=coeffs.every(function(c){return c%qCoeff===0;});
-            if(canDiv)coeffs=coeffs.map(function(c){return c/qCoeff;});
-        }
-        var eqL=[],idx=0;
-        for(var i=0;i<left.length;i++){var c=coeffs[idx++];var t=i===qL?formula:left[i];eqL.push((c===1?'':c)+t);}
-        var eqR=[];
-        for(var i=0;i<right.length;i++){var c=coeffs[idx++];var t=i===qR?formula:right[i];eqR.push((c===1?'':c)+t);}
-        return {answer: formula,equation: eqL.join(' + ')+' = '+eqR.join(' + ')};
-    }
-    return {error:'Не удалось подобрать вещество. Попробуйте другое уравнение.'};
-}
-
-document.getElementById('eqCalcBtn').addEventListener('click',function(){
-    var f=document.getElementById('eqInput').value.trim();
-    var out=document.getElementById('eqResult');
-    if(!f){out.innerHTML='<div class="calc-err">Введите уравнение</div>';return;}
-    if(f.indexOf('?')!==-1){
-        var r=solveWithQuestion(f);
-        if(!r){out.innerHTML='<div class="calc-err">Ошибка разбора</div>';return;}
-        if(r.error){out.innerHTML='<div class="calc-err">❌ '+esc(r.error)+'</div>';return;}
-        out.innerHTML='<div class="calc-ok">✓ ? = <b>'+esc(r.answer)+'</b></div><div class="calc-eq-result">'+esc(r.equation)+'</div>';
-        return;
-    }
-    var r=balanceEquation(f);
-    if(r.error){out.innerHTML='<div class="calc-err">❌ '+esc(r.error)+'</div>';return;}
-    out.innerHTML='<div class="calc-ok">✓ Уравнено:</div><div class="calc-eq-result">'+esc(r.result)+'</div>';
-});
-
-/* ============ ОБНОВЛЕНИЕ ============ */
-function extractArray(html,varName){
-    var re=new RegExp('var\\s+'+varName+'\\s*=\\s*(\\[[\\s\\S]*?\\]);','m');
-    var m=html.match(re);if(!m)return null;
-    try{return new Function('return '+m[1])();}catch(e){return null;}
-}
-function extractObject(html,varName){
-    var re=new RegExp('var\\s+'+varName+'\\s*=\\s*(\\{[\\s\\S]*?\\});','m');
-    var m=html.match(re);if(!m)return null;
-    try{return new Function('return '+m[1])();}catch(e){return null;}
-}
-function extractBuild(html){
-    var m=html.match(/var\s+BUILD\s*=\s*['"]([^'"]+)['"]/);
-    return m?m[1]:null;
-}
-function dataHash(arr){try{var s=JSON.stringify(arr||[]);var h=0;for(var i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;}return h;}catch(e){return 0;}}
-
-updFetchBtn.addEventListener('click',function(){
-    var url=updUrl.value.trim();
-    if(!url){updStatus.className='upd-status err';updStatus.textContent='Укажите URL';return;}
-    setUpdateUrl(url);
-    updFetchBtn.disabled=true;
-    updFetchBtn.innerHTML='<span class="spinner"></span> Загрузка...';
-    var sep=url.indexOf('?')===-1?'?':'&';
-    var bustUrl=url+sep+'_cb='+Date.now();
-    var attempts=[
-        {name:'прямое',url:bustUrl},
-        {name:'corsproxy.io',url:'https://corsproxy.io/?url='+encodeURIComponent(bustUrl)},
-        {name:'allorigins',url:'https://api.allorigins.win/raw?url='+encodeURIComponent(bustUrl)},
-        {name:'codetabs',url:'https://api.codetabs.com/v1/proxy?quest='+encodeURIComponent(bustUrl)}
-    ];
-    var idx=0;
-    function resetBtn(){updFetchBtn.disabled=false;updFetchBtn.textContent='Загрузить и применить';}
-    function tryNext(){
-        if(idx>=attempts.length){
-            updStatus.className='upd-status err';
-            updStatus.innerHTML='❌ <b>Все способы не сработали.</b><br>Проверьте интернет и URL.';
-            resetBtn();return;
-        }
-        var a=attempts[idx];
-        updStatus.className='upd-status info';
-        updStatus.textContent='Попытка '+(idx+1)+'/'+attempts.length+': '+a.name+'...';
-        fetch(a.url,{cache:'no-store',mode:'cors'})
-            .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.text();})
-            .then(function(html){
-                if(!html||html.length<1000)throw new Error('Слишком маленький ответ');
-                var newE=extractArray(html,'ELEMENTS');
-                var newC=extractArray(html,'COMPOUNDS');
-                var newF=extractArray(html,'FUN_ELEMENTS');
-                var newA=extractArray(html,'ALKANES');
-                if(!newF){var oldF=extractObject(html,'FUN');if(oldF&&oldF.sym)newF=[oldF];}
-                if(!newE||newE.length<100)throw new Error('ELEMENTS не найдены (элементов: '+(newE?newE.length:0)+')');
-                var fetchedBuild=extractBuild(html);
-                var oldHash=dataHash(ELEMENTS)+'|'+dataHash(COMPOUNDS)+'|'+dataHash(FUN_ELEMENTS)+'|'+dataHash(ALKANES);
-                var newC2=newC||COMPOUNDS;
-                var newF2=(newF&&newF.length)?newF:FUN_ELEMENTS;
-                var newA2=(newA&&newA.length)?newA:ALKANES;
-                var newHash=dataHash(newE)+'|'+dataHash(newC2)+'|'+dataHash(newF2)+'|'+dataHash(newA2);
-                var sameData=(oldHash===newHash);
-                var oldEC=ELEMENTS.length,oldMC=FUN_ELEMENTS.length,oldAC=ALKANES.length;
-                ELEMENTS=newE;
-                if(newC)COMPOUNDS=newC;
-                if(newF&&newF.length)FUN_ELEMENTS=newF;
-                if(newA&&newA.length)ALKANES=newA;
-                rebuildDB();updateStatus();render(input.value);
-                var lsOK=true,lsErr='';
-                try{
-                    localStorage.setItem(LS_E,JSON.stringify(newE));
-                    if(newC)localStorage.setItem(LS_C,JSON.stringify(newC));
-                    if(newF&&newF.length)localStorage.setItem(LS_F,JSON.stringify(newF));
-                    if(newA&&newA.length)localStorage.setItem(LS_A,JSON.stringify(newA));
-                    localStorage.setItem(LS_D,new Date().toISOString());
-                    if(fetchedBuild)localStorage.setItem(LS_B,fetchedBuild);
-                    var v=localStorage.getItem(LS_E);
-                    if(!v)throw new Error('localStorage не сохраняет');
-                }catch(e){lsOK=false;lsErr=e.message;}
-                if(sameData){
-                    updStatus.className='upd-status info';
-                    updStatus.innerHTML='ℹ️ <b>Изменений нет</b><br>GitHub прислал <b>те же данные</b>.<br><br>Элементов: '+newE.length+' (было '+oldEC+')<br>Алканов: '+newA2.length+' (было '+oldAC+')<br>Мемных: '+newF2.length+' (было '+oldMC+')<br><br>Сборка GitHub: <b>'+esc(fetchedBuild||'нет BUILD')+'</b><br>Ваша сборка: <b>'+BUILD+'</b>';
-                }else if(lsOK){
-                    updStatus.className='upd-status ok';
-                    updStatus.innerHTML='✅ <b>Обновлено!</b><br>Способ: '+a.name+'<br>Элементов: <b>'+newE.length+'</b> (было '+oldEC+')<br>Алканов: <b>'+newA2.length+'</b> (было '+oldAC+')<br>Сборка GitHub: <b>'+esc(fetchedBuild||'?')+'</b><br>localStorage: <b style="color:#4bd47a">OK ✓</b>';
-                }else{
-                    updStatus.className='upd-status err';
-                    updStatus.innerHTML='⚠️ <b>Применено в памяти, но НЕ сохранено!</b><br>Причина: '+esc(lsErr)+'<br><br>Включите <code>setDomStorageEnabled(true)</code>.';
-                }
-                resetBtn();
-            })
-            .catch(function(err){console.warn('['+a.name+']',err.message);idx++;setTimeout(tryNext,250);});
-    }
-    tryNext();
-});
-
-updResetBtn.addEventListener('click',function(){
-    if(!hasSavedData()){updStatus.className='upd-status info';updStatus.innerHTML='Уже встроенные данные.';return;}
-    if(!confirm('Удалить данные с GitHub?'))return;
-    try{localStorage.removeItem(LS_E);localStorage.removeItem(LS_C);localStorage.removeItem(LS_F);localStorage.removeItem(LS_A);localStorage.removeItem(LS_D);localStorage.removeItem(LS_B);}catch(e){}
-    location.reload();
-});
-
-input.addEventListener('input',function(){render(input.value);});
-document.querySelectorAll('#hints code').forEach(function(el){
-    el.addEventListener('click',function(){var q=this.getAttribute('data-q');input.value=q;render(q);});
-});
-
-rebuildDB();
-render('');
-updateStatus();
-console.log('✅ ChemSearch '+BUILD+'. Records:',DB.length,'| Alkanes:',ALKANES.length,'| Saved:',hasSavedData());
-})();
-</script>
-</body>
-</html>
+[30,'Zn

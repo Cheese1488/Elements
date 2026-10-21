@@ -79,8 +79,6 @@ h1 b{color:#5fb8ff}
 .upd-note{font-size:.72rem;color:#6d8eb2;margin-top:12px;line-height:1.5;padding-top:10px;border-top:1px dashed #2b4a70}
 .spinner{display:inline-block;width:12px;height:12px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;vertical-align:middle;margin-right:6px}
 @keyframes spin{to{transform:rotate(360deg)}}
-
-/* ==== НАСТРОЙКИ ==== */
 .set-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px;background:#0d1f30;border-radius:12px;margin-bottom:10px}
 .set-row .set-info{flex:1;min-width:0}
 .set-row .set-name{font-size:.92rem;color:#e0eeff;font-weight:500;margin-bottom:3px}
@@ -95,6 +93,22 @@ h1 b{color:#5fb8ff}
 .fun-list-title{font-size:.72rem;color:#7ea3cc;margin-bottom:6px}
 .fun-list-items{display:flex;flex-wrap:wrap;gap:5px}
 .fun-list-items span{background:linear-gradient(90deg,rgba(255,75,139,.18),rgba(75,185,255,.18),rgba(184,75,255,.18));border:1px solid #b84bff;color:#e97bff;padding:3px 10px;border-radius:20px;font-size:.72rem;font-weight:600;font-family:monospace}
+.calc-tabs{display:flex;gap:6px;margin-bottom:12px}
+.calc-tab{flex:1;padding:8px 10px;border-radius:20px;background:#0d1f30;border:1px solid #2b4a70;color:#8fb8d8;font-size:.8rem;cursor:pointer;font-weight:500}
+.calc-tab.active{background:linear-gradient(135deg,#3a7bd5,#4fa3ff);color:#fff;border-color:#4f9cff}
+.calc-input{width:100%;padding:11px 12px;background:#0a1929;border:1px solid #2b4a70;border-radius:10px;color:#e0eeff;font-family:monospace;font-size:.95rem;outline:none;margin-bottom:10px}
+.calc-input:focus{border-color:#3f9eff;box-shadow:0 0 0 2px rgba(63,158,255,.15)}
+.calc-result{margin-top:12px;font-size:.88rem;color:#c6dcf3;line-height:1.5}
+.calc-ok{background:#0d2a1d;border-left:3px solid #4bd47a;padding:10px 12px;border-radius:8px;margin-bottom:8px;color:#c6f3d2}
+.calc-ok b{color:#7dffb4;font-size:1.05rem}
+.calc-err{background:#2a1212;border-left:3px solid #d95a5a;padding:10px 12px;border-radius:8px;color:#f3c6c6}
+.calc-detail{margin-top:6px;display:flex;flex-wrap:wrap;gap:5px}
+.calc-detail span{background:#0a1929;border:1px solid #1d3f60;color:#a0c8ee;padding:3px 9px;border-radius:20px;font-size:.75rem;font-family:monospace}
+.calc-eq-result{background:#0a1929;border:1px solid #4f9cff;padding:12px;border-radius:10px;font-family:monospace;font-size:.95rem;color:#bfe0ff;text-align:center;word-break:break-word;line-height:1.5}
+.calc-hints{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;margin-bottom:12px}
+.calc-hints code{background:#0a1a2a;border:1px solid #24476b;color:#b6d6ff;padding:3px 9px;border-radius:20px;font-size:.72rem;font-family:monospace;cursor:pointer;user-select:none}
+.calc-hints code:active{background:#1e3a5a}
+.hidden{display:none!important}
 </style>
 </head>
 <body>
@@ -103,6 +117,7 @@ h1 b{color:#5fb8ff}
         <div class="header-row">
             <h1><b>🧪</b> Хим. элементы</h1>
             <div class="header-btns">
+                <button class="upd-btn" id="calcOpenBtn">🧮</button>
                 <button class="upd-btn" id="setOpenBtn">⚙️</button>
                 <button class="upd-btn" id="updOpenBtn">🔄</button>
             </div>
@@ -124,12 +139,10 @@ h1 b{color:#5fb8ff}
         <code data-q="Феррум">Феррум</code>
         <code data-q="Аурум">Аурум</code>
         <code data-q="Аргентум">Аргентум</code>
-        <code data-q="Cuprum">Cuprum</code>
-        <code data-q="Iron">Iron</code>
         <code data-q="H2O">H2O</code>
-        <code data-q="Au">Au</code>
+        <code data-q="H2SO4">H2SO4</code>
     </div>
-    <div class="version" id="versionLine">v2.3-offline</div>
+    <div class="version" id="versionLine">v2.5-offline</div>
 </div>
 
 <div class="modal" id="modal">
@@ -150,7 +163,7 @@ h1 b{color:#5fb8ff}
             <button class="btn-primary" id="updFetchBtn">Загрузить и применить</button>
             <button class="btn-secondary" id="updResetBtn">↩ К встроенной</button>
         </div>
-        <div class="upd-note">💡 Скачивается только база с GitHub, интерфейс остаётся прежний.</div>
+        <div class="upd-note">💡 Скачивается только база с GitHub. Данные применяются сразу.</div>
     </div>
 </div>
 
@@ -176,6 +189,48 @@ h1 b{color:#5fb8ff}
     </div>
 </div>
 
+<div class="modal" id="calcModal">
+    <div class="modal-inner upd-inner">
+        <button class="close-btn" id="calcCloseBtn">×</button>
+        <div class="upd-title">🧮 Химический калькулятор</div>
+        <div class="calc-tabs">
+            <button class="calc-tab active" data-pane="Mass">Молярная масса</button>
+            <button class="calc-tab" data-pane="Eq">Уравнение</button>
+        </div>
+        <div class="calc-pane" id="calcMassPane">
+            <label class="upd-label">Формула (H2O, H2SO4, C6H12O6, Ca(OH)2):</label>
+            <input id="massInput" class="calc-input" type="text" placeholder="H2O" autocomplete="off" spellcheck="false">
+            <div class="calc-hints">
+                <code data-calc="H2O">H2O</code>
+                <code data-calc="H2SO4">H2SO4</code>
+                <code data-calc="C6H12O6">C6H12O6</code>
+                <code data-calc="Ca(OH)2">Ca(OH)2</code>
+                <code data-calc="NaCl">NaCl</code>
+            </div>
+            <div class="upd-btns">
+                <button class="btn-primary" id="massCalcBtn">Рассчитать массу</button>
+            </div>
+            <div class="calc-result" id="massResult"></div>
+        </div>
+        <div class="calc-pane hidden" id="calcEqPane">
+            <label class="upd-label">Уравнение (можно использовать ? вместо неизвестного):</label>
+            <input id="eqInput" class="calc-input" type="text" placeholder="H2 + ? = H2O" autocomplete="off" spellcheck="false">
+            <div class="calc-hints">
+                <code data-eq="H2 + ? = H2O">H2 + ? = H2O</code>
+                <code data-eq="? + O = H2O">? + O = H2O</code>
+                <code data-eq="Zn + O2 = ZnO">Zn + O2 = ZnO</code>
+                <code data-eq="? + O2 = H2O">? + O2 = H2O</code>
+                <code data-eq="H2 + O2 = H2O">H2 + O2 = H2O</code>
+            </div>
+            <div class="upd-btns">
+                <button class="btn-primary" id="eqCalcBtn">Уравнять</button>
+            </div>
+            <div class="calc-result" id="eqResult"></div>
+        </div>
+        <div class="upd-note">💡 Поддерживаются скобки (Ca(OH)2) и знак «?» для поиска неизвестного. Работает офлайн.</div>
+    </div>
+</div>
+
 <script>
 (function(){
 'use strict';
@@ -188,125 +243,143 @@ var LS_D='__chem_updated_at__';
 var LS_SHOW_FUN='__chem_show_fun__';
 
 var ELEMENTS=[
-[1,'H','Водород','1.008','Неметалл',1,1,['гидроген','hydrogen'],-259,-253,1766,'Самый лёгкий и распространённый элемент во Вселенной.'],
-[2,'He','Гелий','4.003','Благородный газ',18,1,['гелиум','helium'],-272,-269,1868,'Второй по лёгкости. Инертный газ.'],
+[1,'H','Водород','1.008','Неметалл',1,1,['гидроген','hydrogen'],-259,-253,1766,'Самый лёгкий элемент во Вселенной.'],
+[2,'He','Гелий','4.003','Благородный газ',18,1,['гелиум','helium'],-272,-269,1868,'Инертный газ. Криогеника.'],
 [3,'Li','Литий','6.94','Щелочной металл',1,2,['литиум','lithium'],181,1342,1817,'Самый лёгкий металл. Аккумуляторы.'],
 [4,'Be','Бериллий','9.012','Щёлочноземельный металл',2,2,['бериллиум','beryllium'],1287,2469,1798,'Лёгкий, но очень токсичный.'],
 [5,'B','Бор','10.81','Полуметалл',13,2,['борум','boron'],2076,3927,1808,'Стекло, керамика, полупроводники.'],
 [6,'C','Углерод','12.011','Неметалл',14,2,['карбон','carbon'],3550,4027,'доист.','Основа органической жизни.'],
-[7,'N','Азот','14.007','Неметалл',15,2,['нитроген','nitrogen'],-210,-196,1772,'78% атмосферы. Синтез белков.'],
-[8,'O','Кислород','15.999','Неметалл',16,2,['оксиген','oxygen'],-219,-183,1774,'Самый распространённый в земной коре.'],
-[9,'F','Фтор','18.998','Галоген',17,2,['фтор','fluorine'],-220,-188,1886,'Самый химически активный неметалл.'],
-[10,'Ne','Неон','20.180','Благородный газ',18,2,['неон','neon'],-249,-246,1898,'Оранжево-красное свечение в лампах.'],
+[7,'N','Азот','14.007','Неметалл',15,2,['нитроген','nitrogen'],-210,-196,1772,'78% атмосферы.'],
+[8,'O','Кислород','15.999','Неметалл',16,2,['оксиген','oxygen'],-219,-183,1774,'Самый распространённый в коре.'],
+[9,'F','Фтор','18.998','Галоген',17,2,['фтор','fluorine'],-220,-188,1886,'Самый активный неметалл.'],
+[10,'Ne','Неон','20.180','Благородный газ',18,2,['неон','neon'],-249,-246,1898,'Оранжево-красное свечение.'],
 [11,'Na','Натрий','22.990','Щелочной металл',1,3,['натриум','natrium','sodium'],98,883,1807,'Компонент поваренной соли.'],
 [12,'Mg','Магний','24.305','Щёлочноземельный металл',2,3,['магнезиум','magnesium'],650,1091,1755,'Сплавы, фейерверки.'],
-[13,'Al','Алюминий','26.982','Постпереходный металл',13,3,['алюминиум','aluminium','aluminum'],660,2519,1825,'Самый распространённый металл в коре.'],
+[13,'Al','Алюминий','26.982','Постпереходный металл',13,3,['алюминиум','aluminium','aluminum'],660,2519,1825,'Распространённый металл в коре.'],
 [14,'Si','Кремний','28.085','Полуметалл',14,3,['силициум','silicium','silicon'],1414,3265,1824,'Основа полупроводников.'],
 [15,'P','Фосфор','30.974','Неметалл',15,3,['фосфор','phosphorus'],44,281,1669,'ДНК, АТФ, кости.'],
 [16,'S','Сера','32.06','Неметалл',16,3,['сульфур','sulfur','sulphur'],115,445,'доист.','Жёлтое кристаллическое вещество.'],
 [17,'Cl','Хлор','35.45','Галоген',17,3,['хлор','chlorum','chlorine'],-101,-34,1774,'Обеззараживание воды.'],
 [18,'Ar','Аргон','39.948','Благородный газ',18,3,['аргон','argon'],-189,-186,1894,'Третий газ атмосферы.'],
-[19,'K','Калий','39.098','Щелочной металл',1,4,['калиум','kalium','potassium'],63,759,1807,'Работа нервных клеток. Удобрения.'],
+[19,'K','Калий','39.098','Щелочной металл',1,4,['калиум','kalium','potassium'],63,759,1807,'Нервные клетки. Удобрения.'],
 [20,'Ca','Кальций','40.078','Щёлочноземельный металл',2,4,['кальциум','calcium'],842,1484,1808,'Основа костей и зубов.'],
-[21,'Sc','Скандий','44.956','Переходный металл',3,4,['скандиум','scandium'],1541,2836,1879,'Лёгкие сплавы для аэрокосмоса.'],
-[22,'Ti','Титан','47.867','Переходный металл',4,4,['титанум','titanium'],1668,3287,1791,'Прочный, лёгкий. Импланты, самолёты.'],
+[21,'Sc','Скандий','44.956','Переходный металл',3,4,['скандиум','scandium'],1541,2836,1879,'Лёгкие сплавы.'],
+[22,'Ti','Титан','47.867','Переходный металл',4,4,['титанум','titanium'],1668,3287,1791,'Прочный, лёгкий. Импланты.'],
 [23,'V','Ванадий','50.942','Переходный металл',5,4,['ванадиум','vanadium'],1910,3407,1801,'Инструментальные стали.'],
 [24,'Cr','Хром','51.996','Переходный металл',6,4,['хромиум','chromium'],1907,2671,1797,'Нержавеющая сталь.'],
-[25,'Mn','Марганец','54.938','Переходный металл',7,4,['манганиум','манганум','manganese'],1246,2061,1774,'Сталь, батарейки.'],
+[25,'Mn','Марганец','54.938','Переходный металл',7,4,['манганиум','manganese'],1246,2061,1774,'Сталь, батарейки.'],
 [26,'Fe','Железо','55.845','Переходный металл',8,4,['феррум','ферум','ferrum','iron'],1538,2862,'доист.','Основа стали. Гемоглобин.'],
 [27,'Co','Кобальт','58.933','Переходный металл',9,4,['кобальтум','cobaltum','cobalt'],1495,2927,1735,'Синий пигмент, батареи.'],
-[28,'Ni','Никель','58.693','Переходный металл',10,4,['никель','niccolum','nickel'],1455,2913,1751,'Сплавы, монеты, аккумуляторы.'],
-[29,'Cu','Медь','63.546','Переходный металл',11,4,['купрум','cuprum','copper'],1085,2562,'доист.','Отличный проводник. Бронза.'],
+[28,'Ni','Никель','58.693','Переходный металл',10,4,['никель','niccolum','nickel'],1455,2913,1751,'Сплавы, монеты.'],
+[29,'Cu','Медь','63.546','Переходный металл',11,4,['купрум','cuprum','copper'],1085,2562,'доист.','Отличный проводник.'],
 [30,'Zn','Цинк','65.38','Переходный металл',12,4,['цинкум','zincum','zinc'],420,907,1746,'Оцинковка стали.'],
 [31,'Ga','Галлий','69.723','Постпереходный металл',13,4,['галлиум','gallium'],30,2204,1875,'Плавится в руке. LED.'],
-[32,'Ge','Германий','72.630','Полуметалл',14,4,['германиум','germanium'],938,2833,1886,'Оптоволокно, ИК-оптика.'],
-[33,'As','Мышьяк','74.922','Полуметалл',15,4,['арсеникум','arsenicum','arsenic'],817,614,'доист.','Сильно ядовит. Полупроводники.'],
+[32,'Ge','Германий','72.630','Полуметалл',14,4,['германиум','germanium'],938,2833,1886,'Оптоволокно.'],
+[33,'As','Мышьяк','74.922','Полуметалл',15,4,['арсеникум','arsenic'],817,614,'доист.','Сильно ядовит.'],
 [34,'Se','Селен','78.971','Неметалл',16,4,['селенум','selenium'],221,685,1817,'Необходим в малых дозах.'],
 [35,'Br','Бром','79.904','Галоген',17,4,['бромум','bromum','bromine'],-7,59,1826,'Красно-бурая жидкость.'],
-[36,'Kr','Криптон','83.798','Благородный газ',18,4,['криптон','krypton'],-157,-153,1898,'Инертный газ. Лампы, лазеры.'],
+[36,'Kr','Криптон','83.798','Благородный газ',18,4,['криптон','krypton'],-157,-153,1898,'Инертный газ.'],
 [37,'Rb','Рубидий','85.468','Щелочной металл',1,5,['рубидиум','rubidium'],39,688,1861,'Атомные часы.'],
 [38,'Sr','Стронций','87.62','Щёлочноземельный металл',2,5,['стронциум','strontium'],777,1382,1790,'Красный цвет в фейерверках.'],
 [39,'Y','Иттрий','88.906','Переходный металл',3,5,['иттриум','yttrium'],1522,3345,1794,'LED, сверхпроводники.'],
 [40,'Zr','Цирконий','91.224','Переходный металл',4,5,['циркониум','zirconium'],1855,4409,1789,'Ядерные реакторы.'],
 [41,'Nb','Ниобий','92.906','Переходный металл',5,5,['ниобиум','niobium'],2477,4744,1801,'Сверхпроводящие магниты.'],
 [42,'Mo','Молибден','95.95','Переходный металл',6,5,['молибденум','molybdenum'],2623,4639,1781,'Прочность сталей.'],
-[43,'Tc','Технеций','98','Переходный металл',7,5,['технециум','technetium'],2157,4265,1937,'Первый искусственный элемент.'],
-[44,'Ru','Рутений','101.07','Переходный металл',8,5,['рутениум','ruthenium'],2334,4150,1844,'Катализаторы, электроника.'],
-[45,'Rh','Родий','102.91','Переходный металл',9,5,['родиум','rhodium'],1964,3695,1803,'Очень дорогой. Катализаторы.'],
-[46,'Pd','Палладий','106.42','Переходный металл',10,5,['палладиум','palladium'],1555,2963,1803,'Катализаторы, ювелирка.'],
+[43,'Tc','Технеций','98','Переходный металл',7,5,['технециум','technetium'],2157,4265,1937,'Первый искусственный.'],
+[44,'Ru','Рутений','101.07','Переходный металл',8,5,['рутениум','ruthenium'],2334,4150,1844,'Катализаторы.'],
+[45,'Rh','Родий','102.91','Переходный металл',9,5,['родиум','rhodium'],1964,3695,1803,'Очень дорогой.'],
+[46,'Pd','Палладий','106.42','Переходный металл',10,5,['палладиум','palladium'],1555,2963,1803,'Катализаторы.'],
 [47,'Ag','Серебро','107.87','Переходный металл',11,5,['аргентум','argentum','silver'],962,2162,'доист.','Лучший проводник.'],
 [48,'Cd','Кадмий','112.41','Переходный металл',12,5,['кадмиум','cadmium'],321,767,1817,'Токсичен. Батарейки.'],
 [49,'In','Индий','114.82','Постпереходный металл',13,5,['индиум','indium'],157,2072,1863,'Тачскрины (ITO).'],
 [50,'Sn','Олово','118.71','Постпереходный металл',14,5,['станнум','stannum','tin'],232,2602,'доист.','Бронза, припои.'],
-[51,'Sb','Сурьма','121.76','Полуметалл',15,5,['стибиум','stibium','antimony'],631,1587,'доист.','Сплавы, огнезащита.'],
+[51,'Sb','Сурьма','121.76','Полуметалл',15,5,['стибиум','stibium','antimony'],631,1587,'доист.','Сплавы.'],
 [52,'Te','Теллур','127.60','Полуметалл',16,5,['теллуриум','tellurium'],450,988,1782,'Солнечные панели.'],
-[53,'I','Йод','126.90','Галоген',17,5,['йод','иод','иодум','iodum','iodine'],114,184,1811,'Щитовидная железа.'],
-[54,'Xe','Ксенон','131.29','Благородный газ',18,5,['ксенон','xenon'],-112,-108,1898,'Мощные лампы, анестетик.'],
-[55,'Cs','Цезий','132.91','Щелочной металл',1,6,['цезиум','цезий','caesium','cesium'],28,671,1860,'Атомные часы.'],
+[53,'I','Йод','126.90','Галоген',17,5,['йод','иод','иодум','iodine'],114,184,1811,'Щитовидная железа.'],
+[54,'Xe','Ксенон','131.29','Благородный газ',18,5,['ксенон','xenon'],-112,-108,1898,'Мощные лампы.'],
+[55,'Cs','Цезий','132.91','Щелочной металл',1,6,['цезиум','цезий','cesium'],28,671,1860,'Атомные часы.'],
 [56,'Ba','Барий','137.33','Щёлочноземельный металл',2,6,['бариум','barium'],727,1897,1808,'Рентген-контраст.'],
-[57,'La','Лантан','138.91','Лантаноид',3,6,['лантанум','lanthanum'],920,3464,1839,'Оптика, катализаторы.'],
-[58,'Ce','Церий','140.12','Лантаноид',3,6,['цериум','cerium'],795,3443,1803,'Кремни, катализаторы.'],
-[59,'Pr','Празеодим','140.91','Лантаноид',3,6,['празеодимум','praseodymium'],935,3520,1885,'Мощные магниты.'],
-[60,'Nd','Неодим','144.24','Лантаноид',3,6,['неодимум','neodymium'],1024,3074,1885,'Неодимовые магниты.'],
+[57,'La','Лантан','138.91','Лантаноид',3,6,['лантанум','lanthanum'],920,3464,1839,'Оптика.'],
+[58,'Ce','Церий','140.12','Лантаноид',3,6,['цериум','cerium'],795,3443,1803,'Кремни.'],
+[59,'Pr','Празеодим','140.91','Лантаноид',3,6,['празеодимум','praseodymium'],935,3520,1885,'Магниты.'],
+[60,'Nd','Неодим','144.24','Лантаноид',3,6,['неодимум','neodymium'],1024,3074,1885,'Магниты.'],
 [61,'Pm','Прометий','145','Лантаноид',3,6,['прометиум','promethium'],1042,3000,1945,'Радиоактивный.'],
 [62,'Sm','Самарий','150.36','Лантаноид',3,6,['самариум','samarium'],1072,1794,1879,'Магниты SmCo.'],
 [63,'Eu','Европий','151.96','Лантаноид',3,6,['европиум','europium'],822,1529,1901,'Красное свечение.'],
-[64,'Gd','Гадолиний','157.25','Лантаноид',3,6,['гадолиниум','gadolinium'],1312,3273,1880,'Контраст для МРТ.'],
+[64,'Gd','Гадолиний','157.25','Лантаноид',3,6,['гадолиниум','gadolinium'],1312,3273,1880,'Контраст МРТ.'],
 [65,'Tb','Тербий','158.93','Лантаноид',3,6,['тербиум','terbium'],1356,3230,1843,'Зелёное свечение.'],
-[66,'Dy','Диспрозий','162.50','Лантаноид',3,6,['диспрозиум','dysprosium'],1412,2567,1886,'Магниты, электромобили.'],
-[67,'Ho','Гольмий','164.93','Лантаноид',3,6,['гольмиум','holmium'],1474,2700,1878,'Медицинские лазеры.'],
+[66,'Dy','Диспрозий','162.50','Лантаноид',3,6,['диспрозиум','dysprosium'],1412,2567,1886,'Магниты.'],
+[67,'Ho','Гольмий','164.93','Лантаноид',3,6,['гольмиум','holmium'],1474,2700,1878,'Лазеры.'],
 [68,'Er','Эрбий','167.26','Лантаноид',3,6,['эрбиум','erbium'],1529,2868,1843,'Оптоволокно.'],
-[69,'Tm','Тулий','168.93','Лантаноид',3,6,['тулиум','thulium'],1545,1950,1879,'Рентген-аппараты.'],
+[69,'Tm','Тулий','168.93','Лантаноид',3,6,['тулиум','thulium'],1545,1950,1879,'Рентген.'],
 [70,'Yb','Иттербий','173.05','Лантаноид',3,6,['иттербиум','ytterbium'],824,1196,1878,'Атомные часы.'],
-[71,'Lu','Лютеций','174.97','Лантаноид',3,6,['лютециум','lutetium'],1663,3402,1907,'Детекторы, онкология.'],
-[72,'Hf','Гафний','178.49','Переходный металл',4,6,['гафниум','hafnium'],2233,4603,1923,'Ядерные реакторы.'],
-[73,'Ta','Тантал','180.95','Переходный металл',5,6,['танталум','tantalum'],3017,5458,1802,'Конденсаторы, импланты.'],
-[74,'W','Вольфрам','183.84','Переходный металл',6,6,['вольфрамиум','wolframium','wolfram','tungsten'],3422,5555,1783,'Максимальная T плавления.'],
+[71,'Lu','Лютеций','174.97','Лантаноид',3,6,['лютециум','lutetium'],1663,3402,1907,'Онкология.'],
+[72,'Hf','Гафний','178.49','Переходный металл',4,6,['гафниум','hafnium'],2233,4603,1923,'Реакторы.'],
+[73,'Ta','Тантал','180.95','Переходный металл',5,6,['танталум','tantalum'],3017,5458,1802,'Конденсаторы.'],
+[74,'W','Вольфрам','183.84','Переходный металл',6,6,['вольфрамиум','wolfram','tungsten'],3422,5555,1783,'Максимум T плавления.'],
 [75,'Re','Рений','186.21','Переходный металл',7,6,['рениум','rhenium'],3186,5596,1925,'Жаропрочные сплавы.'],
-[76,'Os','Осмий','190.23','Переходный металл',8,6,['осмиум','osmium'],3033,5012,1803,'Самый плотный элемент.'],
-[77,'Ir','Иридий','192.22','Переходный металл',9,6,['иридиум','iridium'],2466,4428,1803,'Свечи зажигания.'],
-[78,'Pt','Платина','195.08','Переходный металл',10,6,['платинум','platinum'],1768,3825,1735,'Драгоценный. Катализаторы.'],
-[79,'Au','Золото','196.97','Переходный металл',11,6,['аурум','aurum','gold'],1064,2856,'доист.','Драгоценный. Химически инертен.'],
-[80,'Hg','Ртуть','200.59','Переходный металл',12,6,['гидраргирум','hydrargyrum','mercury'],-39,357,'доист.','Жидкий металл. Ядовит.'],
-[81,'Tl','Таллий','204.38','Постпереходный металл',13,6,['таллиум','thallium'],304,1473,1861,'Высокотоксичен.'],
-[82,'Pb','Свинец','207.2','Постпереходный металл',14,6,['плюмбум','plumbum','lead'],327,1749,'доист.','Тяжёлый, токсичный. Аккумуляторы.'],
-[83,'Bi','Висмут','208.98','Постпереходный металл',15,6,['бисмутум','bismuthum','bismuth'],271,1564,'доист.','Радужные кристаллы.'],
-[84,'Po','Полоний','209','Постпереходный металл',16,6,['полониум','polonium'],254,962,1898,'Радиоактивный. Кюри.'],
-[85,'At','Астат','210','Галоген',17,6,['астатум','астатин','astatum','astatine'],302,337,1940,'Самый редкий природный.'],
-[86,'Rn','Радон','222','Благородный газ',18,6,['радон','radon'],-71,-62,1899,'Радиоактивный газ.'],
-[87,'Fr','Франций','223','Щелочной металл',1,7,['франциум','francium'],27,677,1939,'Самый редкий щелочной.'],
-[88,'Ra','Радий','226','Щёлочноземельный металл',2,7,['радий','radium'],700,1737,1898,'Светится в темноте.'],
-[89,'Ac','Актиний','227','Актиноид',3,7,['актиниум','actinium'],1050,3200,1899,'Голубое свечение.'],
-[90,'Th','Торий','232.04','Актиноид',3,7,['ториум','thorium'],1750,4788,1829,'Ядерное топливо.'],
-[91,'Pa','Протактиний','231.04','Актиноид',3,7,['протактиниум','protactinium'],1572,4000,1913,'Радиоактивный.'],
+[76,'Os','Осмий','190.23','Переходный металл',8,6,['осмиум','osmium'],3033,5012,1803,'Самый плотный.'],
+[77,'Ir','Иридий','192.22','Переходный металл',9,6,['иридиум','iridium'],2466,4428,1803,'Свечи.'],
+[78,'Pt','Платина','195.08','Переходный металл',10,6,['платинум','platinum'],1768,3825,1735,'Драгоценный.'],
+[79,'Au','Золото','196.97','Переходный металл',11,6,['аурум','aurum','gold'],1064,2856,'доист.','Драгоценный.'],
+[80,'Hg','Ртуть','200.59','Переходный металл',12,6,['гидраргирум','mercury'],-39,357,'доист.','Жидкий металл.'],
+[81,'Tl','Таллий','204.38','Постпереходный металл',13,6,['таллиум','thallium'],304,1473,1861,'Токсичен.'],
+[82,'Pb','Свинец','207.2','Постпереходный металл',14,6,['плюмбум','plumbum','lead'],327,1749,'доист.','Тяжёлый, токсичный.'],
+[83,'Bi','Висмут','208.98','Постпереходный металл',15,6,['бисмутум','bismuth'],271,1564,'доист.','Радужные кристаллы.'],
+[84,'Po','Полоний','209','Постпереходный металл',16,6,['полониум','polonium'],254,962,1898,'Радиоактивный.'],
+[85,'At','Астат','210','Галоген',17,6,['астатум','астатин','astatine'],302,337,1940,'Редкий.'],
+[86,'Rn','Радон','222','Благородный газ',18,6,['радон','radon'],-71,-62,1899,'Радиоактивный.'],
+[87,'Fr','Франций','223','Щелочной металл',1,7,['франциум','francium'],27,677,1939,'Редкий.'],
+[88,'Ra','Радий','226','Щёлочноземельный металл',2,7,['радий','radium'],700,1737,1898,'Светится.'],
+[89,'Ac','Актиний','227','Актиноид',3,7,['актиниум','actinium'],1050,3200,1899,'Радиоактивный.'],
+[90,'Th','Торий','232.04','Актиноид',3,7,['ториум','thorium'],1750,4788,1829,'Топливо.'],
+[91,'Pa','Протактиний','231.04','Актиноид',3,7,['протактиниум','protactinium'],1572,4000,1913,'Редкий.'],
 [92,'U','Уран','238.03','Актиноид',3,7,['ураниум','уран','uranium'],1132,4131,1789,'Ядерное топливо.'],
-[93,'Np','Нептуний','237','Актиноид',3,7,['нептуниум','neptunium'],644,3902,1940,'Первый трансурановый.'],
-[94,'Pu','Плутоний','244','Актиноид',3,7,['плутониум','plutonium'],639,3228,1940,'Ядерное топливо.'],
-[95,'Am','Америций','243','Актиноид',3,7,['америциум','americium'],1176,2607,1944,'Дымовые датчики.'],
-[96,'Cm','Кюрий','247','Актиноид',3,7,['кюриум','curium'],1340,3110,1944,'Космические источники.'],
+[93,'Np','Нептуний','237','Актиноид',3,7,['нептуниум','neptunium'],644,3902,1940,'Трансурановый.'],
+[94,'Pu','Плутоний','244','Актиноид',3,7,['плутониум','plutonium'],639,3228,1940,'Топливо.'],
+[95,'Am','Америций','243','Актиноид',3,7,['америциум','americium'],1176,2607,1944,'Датчики.'],
+[96,'Cm','Кюрий','247','Актиноид',3,7,['кюриум','curium'],1340,3110,1944,'Источники.'],
 [97,'Bk','Берклий','247','Актиноид',3,7,['берклиум','berkelium'],986,2627,1949,'Синтетический.'],
-[98,'Cf','Калифорний','251','Актиноид',3,7,['калифорниум','californium'],900,1472,1950,'Источник нейтронов.'],
-[99,'Es','Эйнштейний','252','Актиноид',3,7,['эйнштейниум','einsteinium'],860,996,1952,'В честь Эйнштейна.'],
-[100,'Fm','Фермий','257','Актиноид',3,7,['фермиум','fermium'],1527,null,1952,'В честь Ферми.'],
-[101,'Md','Менделевий','258','Актиноид',3,7,['менделевиум','mendelevium'],827,null,1955,'В честь Менделеева.'],
-[102,'No','Нобелий','259','Актиноид',3,7,['нобелиум','nobelium'],827,null,1966,'В честь Нобеля.'],
-[103,'Lr','Лоуренсий','266','Актиноид',3,7,['лоуренсиум','lawrencium'],1627,null,1961,'В честь Лоуренса.'],
-[104,'Rf','Резерфордий','267','Переходный металл',4,7,['резерфордиум','rutherfordium'],2100,5500,1964,'В честь Резерфорда.'],
-[105,'Db','Дубний','268','Переходный металл',5,7,['дубниум','dubnium'],null,null,1967,'В честь Дубны.'],
-[106,'Sg','Сиборгий','269','Переходный металл',6,7,['сиборгиум','seaborgium'],null,null,1974,'В честь Сиборга.'],
-[107,'Bh','Борий','270','Переходный металл',7,7,['бориум','bohrium'],null,null,1981,'В честь Бора.'],
-[108,'Hs','Хассий','269','Переходный металл',8,7,['хассиум','hassium'],null,null,1984,'В честь Гессена.'],
-[109,'Mt','Мейтнерий','278','Переходный металл',9,7,['мейтнериум','meitnerium'],null,null,1982,'В честь Лизы Мейтнер.'],
-[110,'Ds','Дармштадтий','281','Переходный металл',10,7,['дармштадтиум','darmstadtium'],null,null,1994,'В честь Дармштадта.'],
-[111,'Rg','Рентгений','282','Переходный металл',11,7,['рентгениум','roentgenium'],null,null,1994,'В честь Рентгена.'],
-[112,'Cn','Коперниций','285','Постпереходный металл',12,7,['копернициум','copernicium'],null,null,1996,'В честь Коперника.'],
-[113,'Nh','Нихоний','286','Постпереходный металл',13,7,['нихониум','nihonium'],null,null,2004,'Открыт в Японии.'],
-[114,'Fl','Флеровий','289','Постпереходный металл',14,7,['флеровиум','flerovium'],null,null,1999,'В честь Флёрова.'],
-[115,'Mc','Московий','290','Постпереходный металл',15,7,['московиум','moscovium'],null,null,2003,'Открыт в Дубне.'],
-[116,'Lv','Ливерморий','293','Постпереходный металл',16,7,['ливермориум','livermorium'],null,null,2000,'В честь Ливермора.'],
-[117,'Ts','Теннессин','294','Галоген',17,7,['теннессин','tennessine'],null,null,2010,'Открыт в США.'],
-[118,'Og','Оганесон','294','Благородный газ',18,7,['оганесон','oganesson'],null,null,2002,'Самый тяжёлый известный.']
+[98,'Cf','Калифорний','251','Актиноид',3,7,['калифорниум','californium'],900,1472,1950,'Нейтроны.'],
+[99,'Es','Эйнштейний','252','Актиноид',3,7,['эйнштейниум','einsteinium'],860,996,1952,'Синтетический.'],
+[100,'Fm','Фермий','257','Актиноид',3,7,['фермиум','fermium'],1527,null,1952,'Синтетический.'],
+[101,'Md','Менделевий','258','Актиноид',3,7,['менделевиум','mendelevium'],827,null,1955,'Синтетический.'],
+[102,'No','Нобелий','259','Актиноид',3,7,['нобелиум','nobelium'],827,null,1966,'Синтетический.'],
+[103,'Lr','Лоуренсий','266','Актиноид',3,7,['лоуренсиум','lawrencium'],1627,null,1961,'Синтетический.'],
+[104,'Rf','Резерфордий','267','Переходный металл',4,7,['резерфордиум','rutherfordium'],2100,5500,1964,'Синтетический.'],
+[105,'Db','Дубний','268','Переходный металл',5,7,['дубниум','dubnium'],null,null,1967,'Синтетический.'],
+[106,'Sg','Сиборгий','269','Переходный металл',6,7,['сиборгиум','seaborgium'],null,null,1974,'Синтетический.'],
+[107,'Bh','Борий','270','Переходный металл',7,7,['бориум','bohrium'],null,null,1981,'Синтетический.'],
+[108,'Hs','Хассий','269','Переходный металл',8,7,['хассиум','hassium'],null,null,1984,'Синтетический.'],
+[109,'Mt','Мейтнерий','278','Переходный металл',9,7,['мейтнериум','meitnerium'],null,null,1982,'Синтетический.'],
+[110,'Ds','Дармштадтий','281','Переходный металл',10,7,['дармштадтиум','darmstadtium'],null,null,1994,'Синтетический.'],
+[111,'Rg','Рентгений','282','Переходный металл',11,7,['рентгениум','roentgenium'],null,null,1994,'Синтетический.'],
+[112,'Cn','Коперниций','285','Постпереходный металл',12,7,['копернициум','copernicium'],null,null,1996,'Синтетический.'],
+[113,'Nh','Нихоний','286','Постпереходный металл',13,7,['нихониум','nihonium'],null,null,2004,'Синтетический.'],
+[114,'Fl','Флеровий','289','Постпереходный металл',14,7,['флеровиум','flerovium'],null,null,1999,'Синтетический.'],
+[115,'Mc','Московий','290','Постпереходный металл',15,7,['московиум','moscovium'],null,null,2003,'Синтетический.'],
+[116,'Lv','Ливерморий','293','Постпереходный металл',16,7,['ливермориум','livermorium'],null,null,2000,'Синтетический.'],
+[117,'Ts','Теннессин','294','Галоген',17,7,['теннессин','tennessine'],null,null,2010,'Синтетический.'],
+[118,'Og','Оганесон','294','Благородный газ',18,7,['оганесон','oganesson'],null,null,2002,'Самый тяжёлый.']
 ];
+
+var VALENCE={
+H:'I',He:'0',Li:'I',Be:'II',B:'III',C:'IV',N:'III, V',O:'II',F:'I',Ne:'0',
+Na:'I',Mg:'II',Al:'III',Si:'IV',P:'III, V',S:'II, IV, VI',Cl:'I, III, V, VII',Ar:'0',
+K:'I',Ca:'II',Sc:'III',Ti:'III, IV',V:'II, III, IV, V',Cr:'II, III, VI',Mn:'II, IV, VII',
+Fe:'II, III',Co:'II, III',Ni:'II, III',Cu:'I, II',Zn:'II',Ga:'III',Ge:'IV',
+As:'III, V',Se:'II, IV, VI',Br:'I, V',Kr:'0',Rb:'I',Sr:'II',Y:'III',Zr:'IV',
+Nb:'V',Mo:'IV, VI',Tc:'VII',Ru:'III, IV',Rh:'III',Pd:'II, IV',Ag:'I',Cd:'II',
+In:'III',Sn:'II, IV',Sb:'III, V',Te:'II, IV, VI',I:'I, V, VII',Xe:'0',Cs:'I',Ba:'II',
+La:'III',Ce:'III, IV',Pr:'III',Nd:'III',Pm:'III',Sm:'III',Eu:'II, III',Gd:'III',
+Tb:'III, IV',Dy:'III',Ho:'III',Er:'III',Tm:'III',Yb:'II, III',Lu:'III',
+Hf:'IV',Ta:'V',W:'VI',Re:'VII',Os:'VIII',Ir:'III, IV',Pt:'II, IV',Au:'I, III',
+Hg:'I, II',Tl:'I, III',Pb:'II, IV',Bi:'III, V',Po:'II, IV',At:'I, VII',
+Rn:'0',Fr:'I',Ra:'II',Ac:'III',Th:'IV',Pa:'V',U:'VI',Np:'V',Pu:'IV',
+Am:'III',Cm:'III',Bk:'III',Cf:'III',Es:'III',Fm:'III',Md:'III',No:'II',
+Lr:'III',Rf:'IV',Db:'V',Sg:'VI',Bh:'VII',Hs:'VIII',Mt:'—',Ds:'—',Rg:'—',
+Cn:'—',Nh:'—',Fl:'—',Mc:'—',Lv:'—',Ts:'—',Og:'—'
+};
 
 var COMPOUNDS=[
 {name:'Вода',formula:'H2O',desc:'оксид водорода'},
@@ -325,11 +398,11 @@ var COMPOUNDS=[
 ];
 
 var FUN_ELEMENTS=[
-{num:999,sym:'Kb',name:'Коч-Братаниум',mass:'???',cat:'Меметический элемент',group:'—',period:'—',aliases:['коч','братаниум','коч-братаниум','кочбратаниум','koch','bratanium','kochbratanium'],melt:null,boil:null,year:'наши дни',desc:'Легендарный элемент, открыт в курилке.'},
-{num:1000,sym:'El',name:'Эль-Патрониум',mass:'???',cat:'Меметический элемент',group:'—',period:'—',aliases:['эль-патрониум','эльпатрониум','elpatron','el-patron','патрон','patron','el'],melt:null,boil:null,year:'наши дни',desc:'Покровитель всех мемов. Обладает харизмой +100.'},
-{num:1001,sym:'Gu',name:'Гуртовенкум',mass:'???',cat:'Меметический элемент',group:'—',period:'—',aliases:['гуртовенкум','гуртовенк','гурт','gurtovenk','gurtovenkum','gurt'],melt:null,boil:null,year:'наши дни',desc:'Высокореактивный мемный металл. Нестабилен при контакте с реальностью.'},
-{num:1002,sym:'Pn',name:'Пантерий',mass:'???',cat:'Меметический элемент',group:'—',period:'—',aliases:['пантерий','пантер','panter','panther','пантера','pantherium'],melt:null,boil:null,year:'наши дни',desc:'Хищный элемент. Активен в ночное время суток.'},
-{num:1003,sym:'Tf',name:'Телифоний',mass:'???',cat:'Меметический элемент',group:'—',period:'—',aliases:['телифоний','телифон','телефон','telifon','telifonium','telefon','tel'],melt:null,boil:null,year:'наши дни',desc:'Элемент связи. Резонирует на частоте мемов.'}
+{num:999,sym:'Kb',name:'Коч-Братаниум',mass:'???',cat:'Меметический элемент',group:'—',period:'—',aliases:['коч','братаниум','коч-братаниум','kochbratanium'],melt:null,boil:null,year:'наши дни',desc:'Легендарный элемент из курилки.'},
+{num:1000,sym:'El',name:'Эль-Патрониум',mass:'???',cat:'Меметический элемент',group:'—',period:'—',aliases:['эль-патрониум','эльпатрониум','elpatron','патрон'],melt:null,boil:null,year:'наши дни',desc:'Покровитель мемов. Харизма +100.'},
+{num:1001,sym:'Gu',name:'Гуртовенкум',mass:'???',cat:'Меметический элемент',group:'—',period:'—',aliases:['гуртовенкум','гурт','gurtovenk'],melt:null,boil:null,year:'наши дни',desc:'Нестабилен при контакте с реальностью.'},
+{num:1002,sym:'Pn',name:'Пантерий',mass:'???',cat:'Меметический элемент',group:'—',period:'—',aliases:['пантерий','пантер','panther'],melt:null,boil:null,year:'наши дни',desc:'Хищный элемент. Активен ночью.'},
+{num:1003,sym:'Tf',name:'Телифоний',mass:'???',cat:'Меметический элемент',group:'—',period:'—',aliases:['телифоний','телефон','telifon'],melt:null,boil:null,year:'наши дни',desc:'Элемент связи. Резонирует на частоте мемов.'}
 ];
 
 (function loadSaved(){
@@ -337,21 +410,15 @@ var FUN_ELEMENTS=[
         var sE=localStorage.getItem(LS_E),sC=localStorage.getItem(LS_C),sF=localStorage.getItem(LS_F);
         if(sE){var p=JSON.parse(sE);if(Array.isArray(p)&&p.length>100)ELEMENTS=p;}
         if(sC){var pc=JSON.parse(sC);if(Array.isArray(pc)&&pc.length>0)COMPOUNDS=pc;}
-        if(sF){var pf=JSON.parse(sF);
-            if(Array.isArray(pf)&&pf.length>0)FUN_ELEMENTS=pf;
-            else if(pf&&pf.sym)FUN_ELEMENTS=[pf];
-        }
-    }catch(e){console.warn('Load saved:',e);}
+        if(sF){var pf=JSON.parse(sF);if(Array.isArray(pf)&&pf.length>0)FUN_ELEMENTS=pf;}
+    }catch(e){}
 })();
 
 var showFun=true;
-(function loadShowFun(){
-    try{
-        var v=localStorage.getItem(LS_SHOW_FUN);
-        if(v==='0')showFun=false;
-        else if(v==='1')showFun=true;
-    }catch(e){}
-})();
+try{
+    var v=localStorage.getItem(LS_SHOW_FUN);
+    if(v==='0')showFun=false;
+}catch(e){}
 
 var DB=[];
 function rebuildDB(){
@@ -389,15 +456,22 @@ var setOpenBtn=document.getElementById('setOpenBtn');
 var setCloseBtn=document.getElementById('setCloseBtn');
 var funToggle=document.getElementById('funToggle');
 var funListItems=document.getElementById('funListItems');
+var calcModal=document.getElementById('calcModal');
+var calcOpenBtn=document.getElementById('calcOpenBtn');
+var calcCloseBtn=document.getElementById('calcCloseBtn');
 
 function esc(s){
     if(s===null||s===undefined)return '—';
-    return String(s).replace(/[&<>"']/g,function(c){
-        return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
-    });
+    return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});
 }
 function getSavedDate(){try{return localStorage.getItem(LS_D);}catch(e){return null;}}
 function hasSavedData(){try{return !!localStorage.getItem(LS_E);}catch(e){return false;}}
+
+function getAtomicMassStr(sym){
+    for(var i=0;i<ELEMENTS.length;i++){if(ELEMENTS[i][1]===sym)return ELEMENTS[i][3];}
+    return null;
+}
+function getValence(sym){return VALENCE[sym]||'—';}
 
 function updateStatus(){
     var saved=hasSavedData();
@@ -406,10 +480,10 @@ function updateStatus(){
         var d=date?new Date(date):null;
         var dStr=d?d.toLocaleDateString('ru-RU')+' '+d.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'}):'';
         statusLine.textContent='📦 '+dStr;
-        versionLine.textContent='v2.3-offline · данные с GitHub';
+        versionLine.textContent='v2.5-offline · данные с GitHub';
     }else{
         statusLine.textContent='📦 встроенные';
-        versionLine.textContent='v2.3-offline · встроенные данные';
+        versionLine.textContent='v2.5-offline · встроенные данные';
     }
     var lastEl='';
     for(var z=DB.length-1;z>=0;z--){if(DB[z].type==='el'){lastEl=DB[z].sym+' №'+DB[z].num;break;}}
@@ -449,10 +523,7 @@ function search(q){
         }
         if(best>0)out.push({item:item,score:best,matchedBy:matchedBy});
     }
-    out.sort(function(a,b){
-        if(b.score!==a.score)return b.score-a.score;
-        return (a.item.name||'').localeCompare(b.item.name||'');
-    });
+    out.sort(function(a,b){if(b.score!==a.score)return b.score-a.score;return (a.item.name||'').localeCompare(b.item.name||'');});
     return out;
 }
 
@@ -509,6 +580,7 @@ function openModal(item){
         html+='<div class="m-row"><span class="k">Символ</span><span class="v">'+esc(item.sym)+'</span></div>';
         html+='<div class="m-row"><span class="k">Атомный номер</span><span class="v">'+esc(item.num)+'</span></div>';
         html+='<div class="m-row"><span class="k">Атомная масса</span><span class="v">'+esc(item.mass)+' а.е.м.</span></div>';
+        html+='<div class="m-row"><span class="k">Валентность</span><span class="v">'+esc(getValence(item.sym))+'</span></div>';
         html+='<div class="m-row"><span class="k">Категория</span><span class="v">'+esc(item.cat)+'</span></div>';
         html+='<div class="m-row"><span class="k">Группа</span><span class="v">'+esc(item.group)+'</span></div>';
         html+='<div class="m-row"><span class="k">Период</span><span class="v">'+esc(item.period)+'</span></div>';
@@ -528,15 +600,14 @@ function openModal(item){
 function closeModal(){modal.classList.remove('show');}
 closeBtn.addEventListener('click',closeModal);
 modal.addEventListener('click',function(e){if(e.target===modal)closeModal();});
-document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeModal();updModal.classList.remove('show');setModal.classList.remove('show');}});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeModal();updModal.classList.remove('show');setModal.classList.remove('show');calcModal.classList.remove('show');}});
 
 function getUpdateUrl(){try{return localStorage.getItem(LS_URL_KEY)||DEFAULT_URL;}catch(e){return DEFAULT_URL;}}
 function setUpdateUrl(u){try{localStorage.setItem(LS_URL_KEY,u);}catch(e){}}
 
 function openUpdModal(){
     updUrl.value=getUpdateUrl();
-    var saved=hasSavedData();
-    var date=getSavedDate();
+    var saved=hasSavedData(),date=getSavedDate();
     if(saved&&date){
         var d=new Date(date);
         updStatus.className='upd-status info';
@@ -555,19 +626,12 @@ updCloseBtn.addEventListener('click',closeUpdModal);
 updModal.addEventListener('click',function(e){if(e.target===updModal)closeUpdModal();});
 updUrl.addEventListener('change',function(){setUpdateUrl(updUrl.value.trim());});
 
-/* ==== НАСТРОЙКИ ==== */
 function renderFunList(){
     var html='';
-    FUN_ELEMENTS.forEach(function(f){
-        html+='<span>'+esc(f.sym)+' · '+esc(f.name)+'</span>';
-    });
+    FUN_ELEMENTS.forEach(function(f){html+='<span>'+esc(f.sym)+' · '+esc(f.name)+'</span>';});
     funListItems.innerHTML=html||'<span>нет</span>';
 }
-function openSetModal(){
-    funToggle.checked=showFun;
-    renderFunList();
-    setModal.classList.add('show');
-}
+function openSetModal(){funToggle.checked=showFun;renderFunList();setModal.classList.add('show');}
 function closeSetModal(){setModal.classList.remove('show');}
 setOpenBtn.addEventListener('click',openSetModal);
 setCloseBtn.addEventListener('click',closeSetModal);
@@ -575,11 +639,276 @@ setModal.addEventListener('click',function(e){if(e.target===setModal)closeSetMod
 funToggle.addEventListener('change',function(){
     showFun=funToggle.checked;
     try{localStorage.setItem(LS_SHOW_FUN,showFun?'1':'0');}catch(e){}
-    rebuildDB();
-    updateStatus();
-    render(input.value);
+    rebuildDB();updateStatus();render(input.value);
 });
 
+/* ============ КАЛЬКУЛЯТОР ============ */
+calcOpenBtn.addEventListener('click',function(){calcModal.classList.add('show');calcModal.scrollTop=0;});
+calcCloseBtn.addEventListener('click',function(){calcModal.classList.remove('show');});
+calcModal.addEventListener('click',function(e){if(e.target===calcModal)calcModal.classList.remove('show');});
+
+document.querySelectorAll('.calc-tab').forEach(function(tab){
+    tab.addEventListener('click',function(){
+        document.querySelectorAll('.calc-tab').forEach(function(t){t.classList.remove('active');});
+        document.querySelectorAll('.calc-pane').forEach(function(p){p.classList.add('hidden');});
+        this.classList.add('active');
+        var pane=document.getElementById('calc'+this.dataset.pane+'Pane');
+        if(pane)pane.classList.remove('hidden');
+    });
+});
+
+document.querySelectorAll('[data-calc]').forEach(function(c){
+    c.addEventListener('click',function(){document.getElementById('massInput').value=this.dataset.calc;});
+});
+document.querySelectorAll('[data-eq]').forEach(function(c){
+    c.addEventListener('click',function(){document.getElementById('eqInput').value=this.dataset.eq;});
+});
+
+function parseFormula(f){
+    f=String(f).replace(/\s+/g,'');
+    if(!f)return null;
+    var pos=0;
+    function parseGroup(){
+        var res={};
+        while(pos<f.length){
+            var c=f[pos];
+            if(c==='('){
+                pos++;
+                var inner=parseGroup();
+                if(inner===null)return null;
+                if(f[pos]!==')')return null;
+                pos++;
+                var num='';
+                while(pos<f.length&&/\d/.test(f[pos]))num+=f[pos++];
+                var mult=num?parseInt(num,10):1;
+                for(var k in inner)res[k]=(res[k]||0)+inner[k]*mult;
+            }else if(c===')'){
+                return res;
+            }else if(/[A-Z]/.test(c)){
+                var el=c;pos++;
+                while(pos<f.length&&/[a-z]/.test(f[pos]))el+=f[pos++];
+                var num2='';
+                while(pos<f.length&&/\d/.test(f[pos]))num2+=f[pos++];
+                var cnt=num2?parseInt(num2,10):1;
+                res[el]=(res[el]||0)+cnt;
+            }else{
+                return null;
+            }
+        }
+        return res;
+    }
+    return parseGroup();
+}
+
+function molarMass(formula){
+    var parsed=parseFormula(formula);
+    if(!parsed)return {error:'Не удалось разобрать формулу'};
+    var total=0,parts=[];
+    for(var el in parsed){
+        var massStr=getAtomicMassStr(el);
+        if(massStr===null)return {error:'Неизвестный элемент: '+el};
+        var m=parseFloat(massStr);
+        if(isNaN(m))return {error:'Не удалось определить массу '+el};
+        total+=m*parsed[el];
+        parts.push({el:el,count:parsed[el],mass:m});
+    }
+    return {total:total,parts:parts};
+}
+
+document.getElementById('massCalcBtn').addEventListener('click',function(){
+    var f=document.getElementById('massInput').value.trim();
+    var out=document.getElementById('massResult');
+    if(!f){out.innerHTML='<div class="calc-err">Введите формулу</div>';return;}
+    var r=molarMass(f);
+    if(r.error){out.innerHTML='<div class="calc-err">❌ '+esc(r.error)+'</div>';return;}
+    var detail=r.parts.map(function(p){return '<span>'+p.el+': '+p.count+' × '+p.mass+'</span>';}).join(' + ');
+    out.innerHTML='<div class="calc-ok">✓ Молярная масса '+esc(f)+' = <b>'+r.total.toFixed(3)+'</b> г/моль</div>'
+        +'<div class="calc-detail">'+detail+'</div>';
+});
+
+// уравнивание
+function balanceEquation(str){
+    var parts=str.split('=');
+    if(parts.length!==2)return {error:'Нужно ровно одно "=" в уравнении'};
+    var left=parts[0].split('+').map(function(s){return s.trim();}).filter(function(s){return s;});
+    var right=parts[1].split('+').map(function(s){return s.trim();}).filter(function(s){return s;});
+    if(!left.length||!right.length)return {error:'Одна из частей пустая'};
+    var subs=left.concat(right);
+    var n=subs.length;
+    var parsed=[];
+    for(var i=0;i<n;i++){
+        var p=parseFormula(subs[i]);
+        if(!p)return {error:'Не удалось разобрать: '+subs[i]};
+        for(var el in p){
+            if(getAtomicMassStr(el)===null)return {error:'Неизвестный элемент: '+el};
+        }
+        parsed.push(p);
+    }
+    var elSet={};
+    parsed.forEach(function(p){for(var el in p)elSet[el]=true;});
+    var els=Object.keys(elSet);
+    var m=els.length;
+    var A=[];
+    for(var i=0;i<m;i++){
+        A[i]=[];
+        for(var j=0;j<n;j++){
+            var cnt=parsed[j][els[i]]||0;
+            A[i][j]=j<left.length?cnt:-cnt;
+        }
+    }
+    var M=A.map(function(row){return row.slice();});
+    var pivotCols=[],r=0;
+    for(var c=0;c<n&&r<m;c++){
+        var maxRow=-1,maxVal=0;
+        for(var i=r;i<m;i++){
+            if(Math.abs(M[i][c])>maxVal){maxVal=Math.abs(M[i][c]);maxRow=i;}
+        }
+        if(maxVal<1e-9)continue;
+        var tmp=M[r];M[r]=M[maxRow];M[maxRow]=tmp;
+        var pv=M[r][c];
+        for(var j=c;j<n;j++)M[r][j]/=pv;
+        for(var i=0;i<m;i++){
+            if(i===r)continue;
+            var f=M[i][c];
+            if(Math.abs(f)<1e-9)continue;
+            for(var j=c;j<n;j++)M[i][j]-=f*M[r][j];
+        }
+        pivotCols.push(c);
+        r++;
+    }
+    var freeCols=[];
+    for(var c=0;c<n;c++)if(pivotCols.indexOf(c)===-1)freeCols.push(c);
+    if(!freeCols.length)return {error:'Уравнение уже сбалансировано или решения нет'};
+    if(freeCols.length>1)return {error:'Уравнение имеет бесконечно много решений'};
+    var fc=freeCols[0];
+    var x=new Array(n).fill(0);
+    x[fc]=1;
+    for(var rr=0;rr<pivotCols.length;rr++)x[pivotCols[rr]]=-M[rr][fc];
+    function gcd(a,b){a=Math.abs(a);b=Math.abs(b);while(b){var t=b;b=a%b;a=t;}return a;}
+    function lcm(a,b){return Math.abs(a*b)/gcd(a,b);}
+    var denoms=x.map(function(v){
+        for(var k=1;k<=1000;k++)if(Math.abs(v*k-Math.round(v*k))<1e-6)return k;
+        return 1000;
+    });
+    var L=denoms.reduce(function(a,b){return lcm(a,b);},1);
+    var intX=x.map(function(v){return Math.round(v*L);});
+    var g=intX.reduce(function(a,b){return gcd(a,b);},0);
+    if(g>1)intX=intX.map(function(v){return v/g;});
+    if(intX.some(function(v){return v<0;}))intX=intX.map(function(v){return -v;});
+    if(intX.some(function(v){return v===0||v<0;}))return {error:'Не удалось получить корректные коэффициенты'};
+    function renderSide(list,start){
+        var out=[];
+        for(var i=0;i<list.length;i++){
+            var c=intX[start+i];
+            var prefix=(c===1)?'':c;
+            out.push(prefix+list[i]);
+        }
+        return out.join(' + ');
+    }
+    return {
+        result: renderSide(left,0)+' = '+renderSide(right,left.length),
+        coeffs: intX
+    };
+}
+
+// решение уравнения с неизвестным (?)
+function solveWithQuestion(eqStr){
+    var parts=eqStr.split('=');
+    if(parts.length!==2)return {error:'Нужно ровно одно "="'};
+    var left=parts[0].split('+').map(function(s){return s.trim();}).filter(function(s){return s;});
+    var right=parts[1].split('+').map(function(s){return s.trim();}).filter(function(s){return s;});
+    var qL=left.indexOf('?');
+    var qR=right.indexOf('?');
+    if(qL===-1&&qR===-1)return null;
+    if(qL!==-1&&qR!==-1)return {error:'Только один ? допустим'};
+    var qIdx=qL!==-1?qL:qR;
+    // корректируем индекс в общем массиве: если ? был справа, его позиция = left.length + qR
+    var qIdxGlobal=qL!==-1?qL:(left.length+qR);
+
+    // Собираем все элементы
+    var allEls={};
+    left.forEach(function(t){if(t!=='?'){var p=parseFormula(t);if(p)for(var el in p)allEls[el]=true;}});
+    right.forEach(function(t){if(t!=='?'){var p=parseFormula(t);if(p)for(var el in p)allEls[el]=true;}});
+    var els=Object.keys(allEls);
+
+    // Кандидаты
+    var candidates=[];
+    var diatomic={H:true,N:true,O:true,F:true,Cl:true,Br:true,I:true};
+    els.forEach(function(el){if(diatomic[el])candidates.push(el+'2');});
+    els.forEach(function(el){candidates.push(el);});
+    var common=['H2O','H2O2','CO','CO2','SO2','SO3','NO','NO2','N2O','NH3','CH4','HCl','H2S','O3'];
+    common.forEach(function(c){
+        var p=parseFormula(c);
+        if(p){
+            var allIn=Object.keys(p).every(function(el){return allEls[el];});
+            if(allIn)candidates.push(c);
+        }
+    });
+    candidates=candidates.filter(function(c,i){return candidates.indexOf(c)===i;});
+
+    // Пробуем
+    for(var ci=0;ci<candidates.length;ci++){
+        var formula=candidates[ci];
+        var newLeft=left.map(function(t,i){return i===qL?formula:t;});
+        var newRight=right.map(function(t,i){return i===qR?formula:t;});
+        var eqStr2=newLeft.join(' + ')+' = '+newRight.join(' + ');
+        var bal=balanceEquation(eqStr2);
+        if(bal.error)continue;
+        var coeffs=bal.coeffs.slice();
+        var qCoeff=coeffs[qIdxGlobal];
+        if(!qCoeff||qCoeff<=0)continue;
+
+        // Если коэффициент ? больше 1 — попробуем разделить всё
+        if(qCoeff>1){
+            var canDiv=coeffs.every(function(c){return c%qCoeff===0;});
+            if(canDiv)coeffs=coeffs.map(function(c){return c/qCoeff;});
+        }
+
+        // Строим уравнение в формате пользователя
+        var eqL=[],idx=0;
+        for(var i=0;i<left.length;i++){
+            var c=coeffs[idx++];
+            var t=i===qL?formula:left[i];
+            eqL.push((c===1?'':c)+t);
+        }
+        var eqR=[];
+        for(var i=0;i<right.length;i++){
+            var c=coeffs[idx++];
+            var t=i===qR?formula:right[i];
+            eqR.push((c===1?'':c)+t);
+        }
+
+        return {
+            answer: formula,
+            equation: eqL.join(' + ')+' = '+eqR.join(' + ')
+        };
+    }
+    return {error:'Не удалось подобрать вещество. Попробуйте другое уравнение.'};
+}
+
+document.getElementById('eqCalcBtn').addEventListener('click',function(){
+    var f=document.getElementById('eqInput').value.trim();
+    var out=document.getElementById('eqResult');
+    if(!f){out.innerHTML='<div class="calc-err">Введите уравнение</div>';return;}
+
+    // Если есть ? — ищем неизвестное
+    if(f.indexOf('?')!==-1){
+        var r=solveWithQuestion(f);
+        if(!r){out.innerHTML='<div class="calc-err">Ошибка разбора</div>';return;}
+        if(r.error){out.innerHTML='<div class="calc-err">❌ '+esc(r.error)+'</div>';return;}
+        out.innerHTML='<div class="calc-ok">✓ ? = <b>'+esc(r.answer)+'</b></div>'
+            +'<div class="calc-eq-result">'+esc(r.equation)+'</div>';
+        return;
+    }
+
+    // Обычное уравнение
+    var r=balanceEquation(f);
+    if(r.error){out.innerHTML='<div class="calc-err">❌ '+esc(r.error)+'</div>';return;}
+    out.innerHTML='<div class="calc-ok">✓ Уравнено:</div>'
+        +'<div class="calc-eq-result">'+esc(r.result)+'</div>';
+});
+
+/* ============ ОБНОВЛЕНИЕ ДАННЫХ ============ */
 function extractArray(html,varName){
     var re=new RegExp('var\\s+'+varName+'\\s*=\\s*(\\[[\\s\\S]*?\\]);','m');
     var m=html.match(re);
@@ -623,27 +952,32 @@ updFetchBtn.addEventListener('click',function(){
                 var newE=extractArray(html,'ELEMENTS');
                 var newC=extractArray(html,'COMPOUNDS');
                 var newF=extractArray(html,'FUN_ELEMENTS');
-                if(!newF){
-                    var oldF=extractObject(html,'FUN');
-                    if(oldF&&oldF.sym)newF=[oldF];
-                }
-                if(!newE||newE.length<100)throw new Error('ELEMENTS не найдены');
-                if(newE.length<ELEMENTS.length)throw new Error('На GitHub только '+newE.length+' элементов (сейчас в приложении '+ELEMENTS.length+'). Обновите index.html на GitHub.');
+                if(!newF){var oldF=extractObject(html,'FUN');if(oldF&&oldF.sym)newF=[oldF];}
+                if(!newE||newE.length<100)throw new Error('ELEMENTS не найдены в HTML');
+                if(newE.length<ELEMENTS.length)throw new Error('На GitHub только '+newE.length+' элементов (сейчас '+ELEMENTS.length+'). Обновите index.html на GitHub.');
+                var lsOK=true,lsErr='';
                 try{
                     localStorage.setItem(LS_E,JSON.stringify(newE));
                     if(newC)localStorage.setItem(LS_C,JSON.stringify(newC));
                     if(newF&&newF.length)localStorage.setItem(LS_F,JSON.stringify(newF));
                     localStorage.setItem(LS_D,new Date().toISOString());
-                }catch(e){throw new Error('Не удалось сохранить: '+e.message);}
-                updStatus.className='upd-status ok';
-                updStatus.innerHTML='✅ <b>Успешно!</b><br>Способ: '+a.name+'<br>Элементов: '+newE.length+'<br>Мемных: '+(newF?newF.length:0)+'<br>Перезагрузка...';
-                setTimeout(function(){location.reload();},900);
+                    var v=localStorage.getItem(LS_E);
+                    if(!v)throw new Error('localStorage вернул null');
+                }catch(e){lsOK=false;lsErr=e.message;}
+                ELEMENTS=newE;
+                if(newC)COMPOUNDS=newC;
+                if(newF&&newF.length)FUN_ELEMENTS=newF;
+                rebuildDB();updateStatus();render(input.value);
+                if(lsOK){
+                    updStatus.className='upd-status ok';
+                    updStatus.innerHTML='✅ <b>Обновлено!</b><br>Способ: '+a.name+'<br>Элементов: '+newE.length+'<br>Мемных: '+(newF?newF.length:0)+'<br>localStorage: <b style="color:#4bd47a">OK ✓</b>';
+                }else{
+                    updStatus.className='upd-status err';
+                    updStatus.innerHTML='⚠️ <b>Данные применены, но НЕ сохранены!</b><br>Причина: '+lsErr+'<br><br>Включите <code>setDomStorageEnabled(true)</code> в конвертере APK.';
+                }
+                resetBtn();
             })
-            .catch(function(err){
-                console.warn('['+a.name+']',err.message);
-                idx++;
-                setTimeout(tryNext,250);
-            });
+            .catch(function(err){console.warn('['+a.name+']',err.message);idx++;setTimeout(tryNext,250);});
     }
     tryNext();
 });
@@ -661,19 +995,17 @@ updResetBtn.addEventListener('click',function(){
 });
 
 input.addEventListener('input',function(){render(input.value);});
-var hintEls=document.querySelectorAll('#hints code');
-for(var i=0;i<hintEls.length;i++){
-    hintEls[i].addEventListener('click',function(){
+document.querySelectorAll('#hints code').forEach(function(el){
+    el.addEventListener('click',function(){
         var q=this.getAttribute('data-q');
-        input.value=q;
-        render(q);
+        input.value=q;render(q);
     });
-}
+});
 
 rebuildDB();
 render('');
 updateStatus();
-console.log('✅ ChemSearch v2.3. Records:',DB.length,'| Fun:',showFun,FUN_ELEMENTS.length,'| Saved:',hasSavedData());
+console.log('✅ ChemSearch v2.5. Records:',DB.length,'| Fun:',showFun,FUN_ELEMENTS.length,'| Saved:',hasSavedData());
 })();
 </script>
 </body>
